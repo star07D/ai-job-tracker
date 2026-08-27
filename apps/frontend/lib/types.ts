@@ -12,4 +12,18 @@ export interface Job {
   createdAt: string;
 }
 
-export type JobInput = Omit<Job, "id" | "createdAt" | "appliedDate">;
+/**
+ * Fields the client sends when creating/updating a job. `appliedDate` is
+ * optional — the backend defaults it to "now" when omitted.
+ */
+export type JobInput = Omit<Job, "id" | "createdAt" | "appliedDate"> & {
+  appliedDate?: string;
+};
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  createdAt: string;
+}

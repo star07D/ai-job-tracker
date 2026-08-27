@@ -13,7 +13,8 @@ import StatsChart from "@/components/StatsChart";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 import { createJob, deleteJob, getJobs, updateJob } from "@/lib/api";
-import { Job } from "@/lib/types";
+import { logout } from "@/lib/auth";
+import { Job, JobInput } from "@/lib/types";
 import { JobStatus } from "@/lib/job-status";
 
 import toast from "react-hot-toast";
@@ -25,7 +26,22 @@ const EMPTY_FORM: JobFormValues = {
   salary: "",
   notes: "",
   status: "Applied",
+  appliedDate: "",
 };
+
+function formToJobInput(values: JobFormValues): JobInput {
+  return {
+    title: values.title,
+    company: values.company,
+    location: values.location,
+    salary: values.salary,
+    notes: values.notes,
+    status: values.status,
+    appliedDate: values.appliedDate
+      ? new Date(values.appliedDate).toISOString()
+      : undefined,
+  };
+}
 
 function DashboardContent() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -39,18 +55,25 @@ function DashboardContent() {
 
   const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   useEffect(() => {
     loadJobs();
   }, []);
 
   async function loadJobs() {
+    setLoadError(null);
     try {
       const data = await getJobs();
       setJobs(data);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to load dashboard",
-      );
+      const message =
+        error instanceof Error ? error.message : "Failed to load dashboard";
+      setLoadError(message);
+      toast.error(message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -68,11 +91,13 @@ function DashboardContent() {
     }
 
     try {
+      const payload = formToJobInput(formValues);
+
       if (editingJobId) {
-        await updateJob(editingJobId, formValues);
+        await updateJob(editingJobId, payload);
         toast.success("Job updated 🚀");
       } else {
-        await createJob(formValues);
+        await createJob(payload);
         toast.success("Job added 🚀");
       }
 
@@ -104,6 +129,10 @@ function DashboardContent() {
   }
 
   async function handleDeleteJob(id: string) {
+    if (!window.confirm("Delete this application? This cannot be undone.")) {
+      return;
+    }
+
     try {
       await deleteJob(id);
       toast.success("Job deleted");
@@ -123,6 +152,7 @@ function DashboardContent() {
       salary: job.salary || "",
       notes: job.notes || "",
       status: job.status,
+      appliedDate: job.appliedDate ? job.appliedDate.slice(0, 10) : "",
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -185,15 +215,7 @@ function DashboardContent() {
       <Sidebar totalApplications={jobs.length} interviewRate={interviewRate} />
 
       <div className="flex-1 p-8">
-        <DashboardHeader
-          onLogout={() => {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-
-            toast.success("Logged out successfully 👋");
-            window.location.href = "/login";
-          }}
-        />
+        <DashboardHeader onLogout={logout} />
 
         <SearchFilter
           search={search}
@@ -244,7 +266,25 @@ function DashboardContent() {
           isEditing={editingJobId !== null}
         />
 
-        {view === "board" ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500" />
+          </div>
+        ) : loadError ? (
+          <div className="bg-red-500/10 border border-red-500/40 rounded-3xl p-10 text-center">
+            <h2 className="text-3xl font-black mb-3">Couldn&apos;t load your jobs</h2>
+            <p className="text-slate-400 mb-6">{loadError}</p>
+            <button
+              onClick={() => {
+                setLoading(true);
+                loadJobs();
+              }}
+              className="bg-blue-500 hover:bg-blue-600 transition px-6 py-3 rounded-2xl font-semibold"
+            >
+              Retry
+            </button>
+          </div>
+        ) : view === "board" ? (
           <KanbanBoard
             jobs={filteredJobs}
             onEdit={handleEdit}

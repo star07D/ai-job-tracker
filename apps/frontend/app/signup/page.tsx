@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { registerUser } from "@/lib/api";
+import { setSession } from "@/lib/auth";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -49,8 +50,7 @@ export default function SignupPage() {
         password,
       });
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      setSession(data.token, data.user);
 
       toast.success("Account created 🎉");
 
@@ -82,9 +82,9 @@ export default function SignupPage() {
         <div className="mt-16 space-y-6">
           {[
             "Save unlimited jobs",
-            "Track interviews",
+            "Track interview stages",
             "Visual analytics",
-            "AI-powered workflow",
+            "List & kanban board views",
           ].map((item) => (
             <div
               key={item}

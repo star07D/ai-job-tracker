@@ -1,4 +1,4 @@
-import { Job, JobInput } from "./types";
+import { AuthUser, Job, JobInput } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -11,10 +11,20 @@ export class ApiError extends Error {
   }
 }
 
-async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {},
-): Promise<T> {
+function isAuthPath(path: string) {
+  return path.startsWith("/auth/");
+}
+
+function handleUnauthorized() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  if (window.location.pathname !== "/login") {
+    window.location.href = "/login";
+  }
+}
+
+async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -27,15 +37,22 @@ async function apiFetch<T>(
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
 
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    throw new ApiError(data?.message || "Request failed", res.status);
+    // An expired/invalid token on a protected call: drop the session and bounce
+    // to login instead of surfacing a raw error. Auth calls keep their message
+    // so the login/signup forms can show it.
+    if (res.status === 401 && !isAuthPath(path)) {
+      handleUnauthorized();
+    }
+
+    const message = Array.isArray(data?.message)
+      ? data.message.join(", ")
+      : data?.message || "Request failed";
+    throw new ApiError(message, res.status);
   }
 
   return data as T;
@@ -43,12 +60,7 @@ async function apiFetch<T>(
 
 interface AuthResponse {
   token: string;
-  user: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    email: string;
-  };
+  user: AuthUser;
 }
 
 export function registerUser(data: {
@@ -68,6 +80,10 @@ export function login(email: string, password: string) {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+}
+
+export function getMe() {
+  return apiFetch<AuthUser>("/users/me");
 }
 
 export function getJobs() {

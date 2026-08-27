@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { login } from "@/lib/api";
+import { setSession } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,8 +24,7 @@ export default function LoginPage() {
 
       const data = await login(email, password);
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      setSession(data.token, data.user);
 
       toast.success("Welcome back! 🎉");
 

@@ -10,6 +10,8 @@ export interface JobFormValues {
   salary: string;
   notes: string;
   status: JobStatus;
+  /** ISO yyyy-mm-dd, or "" to let the backend default it to today. */
+  appliedDate: string;
 }
 
 interface JobFormProps {
@@ -66,15 +68,28 @@ export default function JobForm({
         />
       </div>
 
-      <select
-        value={values.status}
-        onChange={(e) => onFieldChange("status", e.target.value as JobStatus)}
-        className="w-full bg-black/50 border border-slate-700 rounded-2xl py-4 px-4 mb-5 outline-none"
-      >
-        {JOB_STATUSES.map((status) => (
-          <option key={status}>{status}</option>
-        ))}
-      </select>
+      <div className="grid md:grid-cols-2 gap-5 mb-5">
+        <select
+          value={values.status}
+          onChange={(e) => onFieldChange("status", e.target.value as JobStatus)}
+          className="w-full bg-black/50 border border-slate-700 rounded-2xl py-4 px-4 outline-none"
+        >
+          {JOB_STATUSES.map((status) => (
+            <option key={status}>{status}</option>
+          ))}
+        </select>
+
+        <label className="flex items-center gap-3 bg-black/50 border border-slate-700 rounded-2xl py-4 px-4 text-slate-400">
+          <span className="shrink-0 text-sm">Applied date</span>
+          <input
+            type="date"
+            value={values.appliedDate}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => onFieldChange("appliedDate", e.target.value)}
+            className="w-full bg-transparent text-white outline-none [color-scheme:dark]"
+          />
+        </label>
+      </div>
 
       <textarea
         placeholder="Notes..."
