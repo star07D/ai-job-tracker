@@ -1,32 +1,34 @@
-import { Droppable, Draggable } from "@hello-pangea/dnd";
+"use client";
 
+import { Droppable } from "@hello-pangea/dnd";
 import { Job } from "@/lib/types";
-import { JobStatus, STATUS_COLORS } from "@/lib/job-status";
-import KanbanCard from "./KanbanCard";
+import { JobStatus, statusStyle } from "@/lib/job-status";
+import { cn } from "@/lib/cn";
+import { KanbanCard } from "./KanbanCard";
 
-interface KanbanColumnProps {
-  status: JobStatus;
-  jobs: Job[];
-  onEdit: (job: Job) => void;
-  onDelete: (id: string) => void;
-}
-
-export default function KanbanColumn({
+export function KanbanColumn({
   status,
   jobs,
   onEdit,
   onDelete,
-}: KanbanColumnProps) {
+}: {
+  status: JobStatus;
+  jobs: Job[];
+  onEdit: (job: Job) => void;
+  onDelete: (job: Job) => void;
+}) {
+  const s = statusStyle(status);
+
   return (
-    <div className="bg-[#020617] border border-slate-800 rounded-3xl p-4 w-80 shrink-0 flex flex-col max-h-[70vh]">
-      <div className="flex items-center justify-between mb-4 px-1">
-        <span
-          className={`px-3 py-1 rounded-lg text-sm font-semibold ${STATUS_COLORS[status].badge}`}
-        >
+    <div className="flex flex-col rounded-xl border border-border bg-surface-2/50">
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <span className="label-mono flex items-center gap-2 !text-[10px] !text-fg-muted">
+          <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
           {status}
         </span>
-
-        <span className="text-slate-500 text-sm">{jobs.length}</span>
+        <span className="font-data rounded-full border border-border bg-surface px-1.5 text-[10px] text-fg-subtle">
+          {jobs.length}
+        </span>
       </div>
 
       <Droppable droppableId={status}>
@@ -34,29 +36,24 @@ export default function KanbanColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 overflow-y-auto space-y-3 rounded-2xl p-1 transition ${
-              snapshot.isDraggingOver ? "bg-slate-900/50" : ""
-            }`}
+            className={cn(
+              "min-h-[72px] flex-1 space-y-2 rounded-b-xl p-2 transition-colors",
+              snapshot.isDraggingOver && "bg-accent-soft",
+            )}
           >
             {jobs.map((job, index) => (
-              <Draggable key={job.id} draggableId={job.id} index={index}>
-                {(dragProvided) => (
-                  <div
-                    ref={dragProvided.innerRef}
-                    {...dragProvided.draggableProps}
-                    {...dragProvided.dragHandleProps}
-                  >
-                    <KanbanCard job={job} onEdit={onEdit} onDelete={onDelete} />
-                  </div>
-                )}
-              </Draggable>
+              <KanbanCard
+                key={job.id}
+                job={job}
+                index={index}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ))}
-
             {provided.placeholder}
-
-            {jobs.length === 0 && (
-              <p className="text-slate-600 text-sm text-center py-6">
-                No jobs here
+            {jobs.length === 0 && !snapshot.isDraggingOver && (
+              <p className="px-2 py-6 text-center text-[12px] text-fg-subtle">
+                Nothing here
               </p>
             )}
           </div>

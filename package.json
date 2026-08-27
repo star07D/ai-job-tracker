@@ -2,7 +2,7 @@
   "name": "ai-job-tracker",
   "version": "1.0.0",
   "private": true,
-  "description": "Job application tracker — NestJS API + Next.js dashboard",
+  "description": "Rolio — job application tracker (NestJS API + Next.js app)",
   "author": "Dhruv Patel",
   "license": "ISC",
   "workspaces": [

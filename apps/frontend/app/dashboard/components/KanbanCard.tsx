@@ -1,47 +1,68 @@
-import { Trash2, Pencil } from "lucide-react";
+"use client";
+
+import { Draggable } from "@hello-pangea/dnd";
 import { useRouter } from "next/navigation";
-
+import { Pencil, Trash2 } from "lucide-react";
 import { Job } from "@/lib/types";
+import { cn } from "@/lib/cn";
 
-interface KanbanCardProps {
+export function KanbanCard({
+  job,
+  index,
+  onEdit,
+  onDelete,
+}: {
   job: Job;
+  index: number;
   onEdit: (job: Job) => void;
-  onDelete: (id: string) => void;
-}
-
-export default function KanbanCard({ job, onEdit, onDelete }: KanbanCardProps) {
+  onDelete: (job: Job) => void;
+}) {
   const router = useRouter();
 
   return (
-    <div className="bg-[#020b24] border border-slate-800 rounded-2xl p-4 hover:border-blue-500 transition">
-      <div
-        className="cursor-pointer"
-        onClick={() => router.push(`/dashboard/job/${job.id}`)}
-      >
-        <h3 className="font-bold text-lg mb-1">{job.title}</h3>
-        <p className="text-slate-300 text-sm mb-2">{job.company}</p>
-
-        <div className="flex flex-wrap gap-3 text-slate-500 text-xs">
-          {job.location && <span>📍 {job.location}</span>}
-          {job.salary && <span>💰 {job.salary}</span>}
+    <Draggable draggableId={job.id} index={index}>
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          {...provided.dragHandleProps}
+          className={cn(
+            "group rounded-lg border border-border bg-surface p-3 shadow-card transition-shadow",
+            snapshot.isDragging && "shadow-pop",
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => router.push(`/dashboard/job/${job.id}`)}
+            className="block w-full text-left"
+          >
+            <div className="text-[13px] font-semibold leading-snug">
+              {job.title}
+            </div>
+            <div className="mt-0.5 text-[11.5px] text-fg-muted">
+              {[job.company, job.location].filter(Boolean).join(" · ")}
+            </div>
+          </button>
+          <div className="mt-2.5 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <button
+              type="button"
+              aria-label="Edit"
+              onClick={() => onEdit(job)}
+              className="grid h-7 w-7 place-items-center rounded-md bg-surface-2 text-fg-muted hover:text-fg"
+            >
+              <Pencil size={13} />
+            </button>
+            <button
+              type="button"
+              aria-label="Delete"
+              onClick={() => onDelete(job)}
+              className="grid h-7 w-7 place-items-center rounded-md bg-surface-2 text-fg-muted hover:text-[var(--st-rejected)]"
+            >
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div className="flex gap-2 mt-3">
-        <button
-          onClick={() => onEdit(job)}
-          className="bg-blue-500 hover:bg-blue-600 transition p-2 rounded-lg"
-        >
-          <Pencil size={14} />
-        </button>
-
-        <button
-          onClick={() => onDelete(job.id)}
-          className="bg-red-500 hover:bg-red-600 transition p-2 rounded-lg"
-        >
-          <Trash2 size={14} />
-        </button>
-      </div>
-    </div>
+      )}
+    </Draggable>
   );
 }

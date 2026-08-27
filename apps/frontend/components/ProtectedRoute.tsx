@@ -4,6 +4,7 @@ import { useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getToken, clearSession } from "@/lib/auth";
 import { getMe } from "@/lib/api";
+import { LogoMark } from "@/components/brand/Logo";
 
 interface Props {
   children: ReactNode;
@@ -23,13 +24,11 @@ export default function ProtectedRoute({ children }: Props) {
       return;
     }
 
-    // Validate the token against the API rather than trusting its presence.
     getMe()
       .then(() => {
         if (active) setStatus("authed");
       })
       .catch(() => {
-        // api.ts already redirects on 401; this covers other failures.
         clearSession();
         router.replace("/login");
       });
@@ -41,8 +40,8 @@ export default function ProtectedRoute({ children }: Props) {
 
   if (status === "checking") {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-slate-700 border-t-blue-500" />
+      <div className="grid min-h-screen place-items-center bg-bg">
+        <LogoMark className="h-8 w-8 animate-pulse" />
       </div>
     );
   }

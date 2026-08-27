@@ -7,24 +7,37 @@ export const JOB_STATUSES = [
 
 export type JobStatus = (typeof JOB_STATUSES)[number];
 
-export const STATUS_COLORS: Record<
-  JobStatus,
-  { badge: string; solid: string }
-> = {
+type StatusStyle = {
+  /** text + bg for a badge/pill (theme-aware via CSS vars) */
+  badge: string;
+  /** solid dot / bar color */
+  dot: string;
+};
+
+export const STATUS_STYLES: Record<JobStatus, StatusStyle> = {
   Applied: {
-    badge: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    solid: "bg-blue-500",
+    badge: "text-[var(--st-applied)] bg-[var(--st-applied-bg)]",
+    dot: "bg-[var(--st-applied)]",
   },
   Interview: {
-    badge: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    solid: "bg-yellow-500",
+    badge: "text-[var(--st-interview)] bg-[var(--st-interview-bg)]",
+    dot: "bg-[var(--st-interview)]",
   },
   Accepted: {
-    badge: "bg-green-500/20 text-green-400 border-green-500/30",
-    solid: "bg-green-500",
+    badge: "text-[var(--st-accepted)] bg-[var(--st-accepted-bg)]",
+    dot: "bg-[var(--st-accepted)]",
   },
   Rejected: {
-    badge: "bg-red-500/20 text-red-400 border-red-500/30",
-    solid: "bg-red-500",
+    badge: "text-[var(--st-rejected)] bg-[var(--st-rejected-bg)]",
+    dot: "bg-[var(--st-rejected)]",
   },
 };
+
+export function statusStyle(status: string): StatusStyle {
+  return (
+    STATUS_STYLES[status as JobStatus] ?? {
+      badge: "text-fg-subtle bg-surface-2",
+      dot: "bg-fg-subtle",
+    }
+  );
+}

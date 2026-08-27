@@ -17,6 +17,9 @@ const eslintConfig = defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "warn",
+      // Mount guards / one-time client init in effects are intentional here
+      // (hydration-safe theming, reduced-motion checks). Keep as a hint.
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
 ]);

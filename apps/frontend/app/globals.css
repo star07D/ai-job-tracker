@@ -2,14 +2,181 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body {
-  margin: 0;
-  padding: 0;
-  background: #000;
-  color: white;
+/* ============================================================
+   Rolio — "Editorial × Electric"
+   Fraunces (display) · Hanken Grotesk (UI) · IBM Plex Mono (data)
+   One electric ultramarine accent. Cool near-neutral greys.
+   ============================================================ */
+
+:root {
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --surface-3: #e4e8ee;
+  --fg: #111318;
+  --fg-muted: #5b616e;
+  --fg-subtle: #8b92a0;
+  --border: #e4e7ec;
+  --border-strong: #d3d8e0;
+
+  --accent: #2e2bff;
+  --accent-hover: #211ee0;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(46, 43, 255, 0.08);
+  --accent-line: rgba(46, 43, 255, 0.26);
+
+  --st-applied: #5a6675;
+  --st-applied-bg: #edeff3;
+  --st-interview: #9c6408;
+  --st-interview-bg: #f7ead6;
+  --st-accepted: #0f7a4e;
+  --st-accepted-bg: #e1f1e8;
+  --st-rejected: #c33350;
+  --st-rejected-bg: #fae8ec;
+
+  --shadow-card: 0 1px 2px rgba(17, 19, 24, 0.04), 0 2px 8px rgba(17, 19, 24, 0.05);
+  --shadow-pop: 0 20px 50px -16px rgba(17, 19, 24, 0.22), 0 4px 12px rgba(17, 19, 24, 0.08);
 }
 
+.dark {
+  --bg: #0b0c10;
+  --surface: #131519;
+  --surface-2: #1b1e24;
+  --surface-3: #242830;
+  --fg: #eef0f4;
+  --fg-muted: #9ba2b0;
+  --fg-subtle: #697084;
+  --border: #22262e;
+  --border-strong: #333844;
+
+  --accent: #7c7aff;
+  --accent-hover: #9391ff;
+  --accent-fg: #0b0c10;
+  --accent-soft: rgba(124, 122, 255, 0.13);
+  --accent-line: rgba(124, 122, 255, 0.32);
+
+  --st-applied: #99a1b0;
+  --st-applied-bg: rgba(153, 161, 176, 0.13);
+  --st-interview: #e2a24c;
+  --st-interview-bg: rgba(226, 162, 76, 0.14);
+  --st-accepted: #42c98a;
+  --st-accepted-bg: rgba(66, 201, 138, 0.13);
+  --st-rejected: #f76b82;
+  --st-rejected-bg: rgba(247, 107, 130, 0.14);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 24px 60px -18px rgba(0, 0, 0, 0.7);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+}
+
+@layer utilities {
+  .font-data {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  /* uppercase mono label */
+  .label-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-subtle);
+  }
+}
+
+/* thin, theme-aware scrollbars */
 * {
-  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+  border: 3px solid var(--bg);
+}
+
+/* Dialog entrance — uses @starting-style so the resting state is always
+   visible even if the transition is throttled or unsupported. */
+.rl-overlay {
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+@starting-style {
+  .rl-overlay {
+    opacity: 0;
+  }
+}
+.rl-panel {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@starting-style {
+  .rl-panel {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+.rl-pop {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@starting-style {
+  .rl-pop {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

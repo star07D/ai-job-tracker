@@ -1,8 +1,13 @@
-# AI Job Tracker — Frontend
+# Rolio — Frontend
 
-Next.js 16 / React 19 dashboard for tracking job applications: login/signup,
-a job board with search/filter/sort, per-status stats and a chart, and a
-per-job detail page. Talks to the NestJS API in `../backend`.
+Next.js 16 / React 19 app for tracking job applications: a marketing home,
+login/signup, a job board with list + kanban views, search/filter/sort, a
+pipeline overview with stats and a chart, and a per-job detail page. Light and
+dark themes. Talks to the NestJS API in `../backend`.
+
+Visual system — "Editorial × Electric": Fraunces (display) + Hanken Grotesk (UI)
++ IBM Plex Mono (data), one ultramarine accent, tokens in `app/globals.css`,
+primitives in `components/ui/`.
 
 ## Getting Started
 

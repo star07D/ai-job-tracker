@@ -1,4 +1,4 @@
-# 🚀 AI Job Application Tracker API
+# 🚀 Rolio API
 
 A NestJS + Prisma/PostgreSQL backend for tracking job applications, with JWT
 authentication and per-user job CRUD.

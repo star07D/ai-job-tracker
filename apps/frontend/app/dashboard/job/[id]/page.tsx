@@ -1,344 +1,288 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-
 import {
   ArrowLeft,
-  Building2,
-  MapPin,
-  DollarSign,
-  Calendar,
   Pencil,
   Trash2,
+  MapPin,
+  Banknote,
+  CalendarDays,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-import { deleteJob, getSingleJob, updateJob } from "@/lib/api";
-import { Job, JobInput } from "@/lib/types";
-import { JOB_STATUSES, JobStatus, STATUS_COLORS } from "@/lib/job-status";
-import JobForm, { JobFormValues } from "@/app/dashboard/components/JobForm";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AppTopbar } from "@/components/app/AppTopbar";
+import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+import { StatusBadge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import {
+  JobFormDialog,
+  JobFormValues,
+  formToJobInput,
+  jobToForm,
+} from "@/app/dashboard/components/JobFormDialog";
 
-function jobToForm(job: Job): JobFormValues {
-  return {
-    title: job.title,
-    company: job.company,
-    location: job.location || "",
-    salary: job.salary || "",
-    notes: job.notes || "",
-    status: job.status,
-    appliedDate: job.appliedDate ? job.appliedDate.slice(0, 10) : "",
-  };
+import { deleteJob, getSingleJob, updateJob } from "@/lib/api";
+import { Job } from "@/lib/types";
+import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
+
+const PREP = [
+  "Research company background",
+  "Prepare STAR-method answers",
+  "Practise technical questions",
+  "Decide on salary expectations",
+];
+
+function fmt(iso: string) {
+  return new Date(iso).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
-function formToJobInput(values: JobFormValues): Partial<JobInput> {
-  return {
-    title: values.title,
-    company: values.company,
-    location: values.location,
-    salary: values.salary,
-    notes: values.notes,
-    status: values.status,
-    appliedDate: values.appliedDate
-      ? new Date(values.appliedDate).toISOString()
-      : undefined,
-  };
-}
-
-function JobDetailsContent() {
-  const params = useParams();
+function JobDetailContent() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const id = params.id as string;
 
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [formValues, setFormValues] = useState<JobFormValues | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState<JobFormValues | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
-    async function loadJob() {
-      try {
-        const data = await getSingleJob(id);
-        setJob(data);
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Failed to load job",
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadJob();
+    getSingleJob(id)
+      .then(setJob)
+      .catch((e) =>
+        toast.error(e instanceof Error ? e.message : "Failed to load"),
+      )
+      .finally(() => setLoading(false));
   }, [id]);
 
-  function startEditing() {
-    if (!job) return;
-    setFormValues(jobToForm(job));
-    setIsEditing(true);
+  async function saveForm(values: JobFormValues) {
+    const updated = await updateJob(id, formToJobInput(values));
+    setJob(updated);
+    toast.success("Application updated");
   }
 
-  function handleFieldChange<K extends keyof JobFormValues>(
-    field: K,
-    value: JobFormValues[K],
-  ) {
-    setFormValues((prev) => (prev ? { ...prev, [field]: value } : prev));
-  }
-
-  async function handleSave() {
-    if (!formValues) return;
-    if (!formValues.title || !formValues.company) {
-      toast.error("Title and company required");
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const updated = await updateJob(id, formToJobInput(formValues));
-      setJob(updated);
-      setIsEditing(false);
-      toast.success("Job updated 🚀");
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update job",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function handleStatusChange(status: JobStatus) {
+  async function changeStatus(status: JobStatus) {
     if (!job || status === job.status) return;
-    const previous = job;
+    const prev = job;
     setJob({ ...job, status });
     try {
       await updateJob(id, { status });
-      toast.success("Status updated 🚀");
-    } catch (error) {
-      setJob(previous);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update status",
-      );
+      toast.success("Status updated");
+    } catch (e) {
+      setJob(prev);
+      toast.error(e instanceof Error ? e.message : "Failed to update status");
     }
   }
 
-  async function handleDelete() {
-    if (!window.confirm("Delete this application? This cannot be undone.")) {
-      return;
-    }
-    try {
-      await deleteJob(id);
-      toast.success("Job deleted");
-      router.push("/dashboard");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Delete failed");
-    }
+  async function remove() {
+    await deleteJob(id);
+    toast.success("Application deleted");
+    router.push("/dashboard");
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center text-3xl font-bold">
-        Loading...
+      <div className="mx-auto max-w-4xl px-4 py-10 md:px-8">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="mt-6 h-40 w-full rounded-xl" />
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
       </div>
     );
   }
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center text-3xl font-bold">
-        Job not found
+      <div className="mx-auto max-w-md px-4 py-24">
+        <EmptyState
+          title="Application not found"
+          description="It may have been deleted."
+          action={
+            <Link href="/dashboard">
+              <Button variant="outline">Back to dashboard</Button>
+            </Link>
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-6 lg:p-10">
-      <button
-        onClick={() => router.push("/dashboard")}
-        className="flex items-center gap-2 text-slate-400 hover:text-white transition mb-8"
+    <div className="mx-auto max-w-4xl px-4 py-8 md:px-8">
+      <Link
+        href="/dashboard"
+        className="label-mono inline-flex items-center gap-1.5 transition-colors hover:text-fg"
       >
-        <ArrowLeft size={18} />
-        Back to Dashboard
-      </button>
+        <ArrowLeft size={13} /> Dashboard
+      </Link>
 
-      {isEditing && formValues ? (
-        <div className="max-w-3xl">
-          <JobForm
-            values={formValues}
-            onFieldChange={handleFieldChange}
-            onSubmit={handleSave}
-            onCancel={() => setIsEditing(false)}
-            isEditing
-          />
-          {saving && <p className="text-slate-400 mt-2">Saving…</p>}
-        </div>
-      ) : (
-        <>
-          {/* TOP SECTION */}
-          <div className="bg-[#020b24] border border-slate-800 rounded-3xl p-8 mb-8">
-            <div className="flex flex-col lg:flex-row justify-between gap-6">
-              <div>
-                <h1 className="text-6xl font-black mb-3">{job.title}</h1>
-
-                <div className="flex items-center gap-3 text-slate-300 text-2xl mb-6">
-                  <Building2 size={22} />
-                  {job.company}
-                </div>
-
-                <div className="flex flex-wrap gap-5 text-slate-400">
-                  {job.location && (
-                    <div className="flex items-center gap-2">
-                      <MapPin size={18} />
-                      {job.location}
-                    </div>
-                  )}
-
-                  {job.salary && (
-                    <div className="flex items-center gap-2 text-green-400">
-                      <DollarSign size={18} />
-                      {job.salary}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2">
-                    <Calendar size={18} />
-                    Applied on {new Date(job.appliedDate).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-
-              {/* STATUS */}
-              <div className="flex flex-col gap-3">
-                <div
-                  className={`px-6 py-3 rounded-2xl text-lg font-bold w-fit ${
-                    STATUS_COLORS[job.status]?.solid ?? "bg-slate-500"
-                  }`}
-                >
-                  {job.status}
-                </div>
-
-                <select
-                  value={job.status}
-                  onChange={(e) =>
-                    handleStatusChange(e.target.value as JobStatus)
-                  }
-                  className="bg-black/50 border border-slate-700 rounded-xl px-4 py-2 text-sm outline-none"
-                  aria-label="Change status"
-                >
-                  {JOB_STATUSES.map((status) => (
-                    <option key={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
+      <Card className="mt-5">
+        <CardBody className="flex flex-col justify-between gap-5 sm:flex-row">
+          <div>
+            <h1 className="font-display text-[26px] font-semibold tracking-[-0.02em]">
+              {job.title}
+            </h1>
+            <p className="mt-1 font-medium text-fg-muted">{job.company}</p>
+            <div className="label-mono mt-3.5 flex flex-wrap gap-x-4 gap-y-1.5 !text-[10px]">
+              {job.location && (
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin size={12} /> {job.location}
+                </span>
+              )}
+              {job.salary && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Banknote size={12} /> {job.salary}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays size={12} /> Applied {fmt(job.appliedDate)}
+              </span>
             </div>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* LEFT */}
-            <div className="lg:col-span-2 space-y-8">
-              <div className="bg-[#020b24] border border-slate-800 rounded-3xl p-8">
-                <h2 className="text-4xl font-black mb-6">Notes 📝</h2>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <StatusBadge status={job.status} />
+            <Select
+              value={job.status}
+              onChange={(e) => changeStatus(e.target.value as JobStatus)}
+              className="h-8 w-auto text-[13px]"
+              aria-label="Change status"
+            >
+              {JOB_STATUSES.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </Select>
+          </div>
+        </CardBody>
+      </Card>
 
-                {job.notes ? (
-                  <p className="text-slate-300 leading-8 text-lg whitespace-pre-wrap">
-                    {job.notes}
-                  </p>
-                ) : (
-                  <p className="text-slate-500">No notes added yet.</p>
-                )}
-              </div>
-
-              {/* INTERVIEW PREP */}
-              <div className="bg-[#020b24] border border-slate-800 rounded-3xl p-8">
-                <h2 className="text-4xl font-black mb-2">
-                  Interview Preparation 🚀
-                </h2>
-                <p className="text-slate-500 text-sm mb-6">
-                  A generic checklist for now — AI-tailored prep is coming soon.
+      <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notes</CardTitle>
+            </CardHeader>
+            <CardBody className="pt-3">
+              {job.notes ? (
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-fg-muted">
+                  {job.notes}
                 </p>
+              ) : (
+                <p className="text-sm text-fg-subtle">No notes yet.</p>
+              )}
+            </CardBody>
+          </Card>
 
-                <div className="space-y-4 text-slate-300">
-                  <div className="bg-slate-900 rounded-2xl p-5">
-                    Research company background
-                  </div>
-                  <div className="bg-slate-900 rounded-2xl p-5">
-                    Prepare STAR method answers
-                  </div>
-                  <div className="bg-slate-900 rounded-2xl p-5">
-                    Practice technical questions
-                  </div>
-                  <div className="bg-slate-900 rounded-2xl p-5">
-                    Prepare salary expectations
-                  </div>
-                </div>
-              </div>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Interview prep</CardTitle>
+            </CardHeader>
+            <CardBody className="pt-3">
+              <p className="label-mono mb-3 !text-[10px]">
+                Generic for now — AI-tailored prep coming soon
+              </p>
+              <ul className="space-y-2">
+                {PREP.map((p) => (
+                  <li
+                    key={p}
+                    className="flex items-center gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5 text-[13px]"
+                  >
+                    <span className="h-3.5 w-3.5 shrink-0 rounded border-[1.5px] border-border-strong" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </CardBody>
+          </Card>
+        </div>
 
-            {/* RIGHT */}
-            <div className="space-y-8">
-              <div className="bg-[#020b24] border border-slate-800 rounded-3xl p-8">
-                <h2 className="text-3xl font-black mb-6">Quick Actions</h2>
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Actions</CardTitle>
+            </CardHeader>
+            <CardBody className="flex flex-col gap-2 pt-3">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setEditing(jobToForm(job));
+                  setFormOpen(true);
+                }}
+              >
+                <Pencil size={15} /> Edit application
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full !text-[var(--st-rejected)]"
+                onClick={() => setConfirmOpen(true)}
+              >
+                <Trash2 size={15} /> Delete
+              </Button>
+            </CardBody>
+          </Card>
 
-                <button
-                  onClick={startEditing}
-                  className="w-full bg-blue-500 hover:bg-blue-600 transition rounded-2xl py-4 font-bold flex items-center justify-center gap-2 mb-3"
+          <Card>
+            <CardHeader>
+              <CardTitle>Timeline</CardTitle>
+            </CardHeader>
+            <CardBody className="pt-2 text-sm">
+              {[
+                ["Added", fmt(job.createdAt)],
+                ["Applied", fmt(job.appliedDate)],
+                ["Status", job.status],
+              ].map(([k, v], i) => (
+                <div
+                  key={k}
+                  className={`flex justify-between py-2.5 ${i > 0 ? "border-t border-dashed border-border" : ""}`}
                 >
-                  <Pencil size={18} />
-                  Edit Job
-                </button>
-
-                <button
-                  onClick={handleDelete}
-                  className="w-full bg-red-500/90 hover:bg-red-600 transition rounded-2xl py-4 font-bold flex items-center justify-center gap-2"
-                >
-                  <Trash2 size={18} />
-                  Delete Job
-                </button>
-              </div>
-
-              {/* TIMELINE */}
-              <div className="bg-[#020b24] border border-slate-800 rounded-3xl p-8">
-                <h2 className="text-3xl font-black mb-6">Timeline 📅</h2>
-
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-sm text-slate-500 mb-1">
-                      Application Created
-                    </p>
-                    <p className="text-lg font-semibold">
-                      {new Date(job.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-slate-500 mb-1">Applied Date</p>
-                    <p className="text-lg font-semibold">
-                      {new Date(job.appliedDate).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-slate-500 mb-1">Current Status</p>
-                    <p className="text-lg font-semibold">{job.status}</p>
-                  </div>
+                  <span className="text-fg-subtle">{k}</span>
+                  <span className="font-data font-medium">{v}</span>
                 </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+              ))}
+            </CardBody>
+          </Card>
+        </div>
+      </div>
+
+      <JobFormDialog
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        initial={editing}
+        onSubmit={saveForm}
+      />
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={remove}
+        title="Delete application"
+        message={`Delete "${job.title}" at ${job.company}? This can't be undone.`}
+      />
     </div>
   );
 }
 
-export default function JobDetailsPage() {
+export default function JobDetailPage() {
   return (
     <ProtectedRoute>
-      <JobDetailsContent />
+      <div className="min-h-screen bg-bg">
+        <AppTopbar />
+        <JobDetailContent />
+      </div>
     </ProtectedRoute>
   );
 }
