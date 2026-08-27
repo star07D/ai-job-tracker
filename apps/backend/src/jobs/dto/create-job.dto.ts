@@ -1,4 +1,4 @@
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsISO8601, IsOptional, IsString } from 'class-validator';
 import { JOB_STATUSES } from '../job-status';
 import type { JobStatus } from '../job-status';
 
@@ -23,4 +23,8 @@ export class CreateJobDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsISO8601()
+  appliedDate?: string;
 }
