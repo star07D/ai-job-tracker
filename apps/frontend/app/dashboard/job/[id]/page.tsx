@@ -21,6 +21,7 @@ import { Select } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Reveal } from "@/components/ui/motion";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   JobFormDialog,
@@ -130,7 +131,7 @@ function JobDetailContent() {
         <ArrowLeft size={13} /> Dashboard
       </Link>
 
-      <Card className="mt-5">
+      <Reveal as={Card} className="mt-5 block">
         <CardBody className="flex flex-col justify-between gap-5 sm:flex-row">
           <div>
             <h1 className="font-display text-[26px] font-semibold tracking-[-0.02em]">
@@ -168,9 +169,9 @@ function JobDetailContent() {
             </Select>
           </div>
         </CardBody>
-      </Card>
+      </Reveal>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+      <Reveal index={1} className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
         <div className="space-y-4">
           <Card>
             <CardHeader>
@@ -257,7 +258,7 @@ function JobDetailContent() {
             </CardBody>
           </Card>
         </div>
-      </div>
+      </Reveal>
 
       <JobFormDialog
         open={formOpen}

@@ -50,7 +50,12 @@ export function Landing() {
       {/* single static accent glow, top-left */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-40 -top-40 h-[420px] w-[520px] rounded-full opacity-60 blur-[120px]"
+        className="rl-glow pointer-events-none absolute -left-40 -top-40 h-[440px] w-[560px] rounded-full opacity-70 blur-[120px]"
+        style={{ background: "var(--accent-soft)" }}
+      />
+      <div
+        aria-hidden="true"
+        className="rl-glow pointer-events-none absolute -right-40 top-[26%] h-[380px] w-[440px] rounded-full opacity-40 blur-[140px] [animation-delay:-9s]"
         style={{ background: "var(--accent-soft)" }}
       />
 
@@ -70,35 +75,49 @@ export function Landing() {
 
         {/* HERO */}
         <section className="grid items-center gap-12 py-14 md:grid-cols-[1.05fr_0.95fr] md:py-20">
-          <Reveal>
-            <span className="label-mono inline-flex items-center gap-2 rounded-full border border-accent-line bg-accent-soft px-3 py-1.5 !text-accent">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-              Job search, organised
-            </span>
-            <h1 className="mt-5 font-display text-[2.7rem] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[3.4rem]">
+          <div>
+            <Reveal>
+              <span className="label-mono inline-flex items-center gap-2 rounded-full border border-accent-line bg-accent-soft px-3 py-1.5 !text-accent">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                Job search, organised
+              </span>
+            </Reveal>
+            <Reveal
+              index={1}
+              as="h1"
+              className="mt-5 font-display text-[2.7rem] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[3.4rem]"
+            >
               The job hunt, <span className="text-accent">finally</span> under
               control.
-            </h1>
-            <p className="mt-5 max-w-[42ch] text-lg text-fg-muted">
+            </Reveal>
+            <Reveal
+              index={2}
+              as="p"
+              className="mt-5 max-w-[42ch] text-lg text-fg-muted"
+            >
               Track every application from applied to offer. See where things
               stand at a glance. Keep notes, salary and next steps on every role.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/signup">
-                <Button size="lg">
-                  Start tracking — free <ArrowRight size={16} />
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button variant="outline" size="lg">Sign in</Button>
-              </Link>
-            </div>
-            <p className="label-mono mt-4 !text-[10px]">
-              No card required · Your data stays yours
-            </p>
-          </Reveal>
+            </Reveal>
+            <Reveal index={3}>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Link href="/signup">
+                  <Button size="lg">
+                    Start tracking — free <ArrowRight size={16} />
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button variant="outline" size="lg">
+                    Sign in
+                  </Button>
+                </Link>
+              </div>
+              <p className="label-mono mt-4 !text-[10px]">
+                No card required · Your data stays yours
+              </p>
+            </Reveal>
+          </div>
 
-          <Reveal index={1}>
+          <Reveal index={2}>
             <DashboardPreview />
           </Reveal>
         </section>
@@ -109,8 +128,8 @@ export function Landing() {
             {FEATURES.map((f, i) => (
               <Reveal
                 key={f.title}
-                index={i}
-                className="rounded-xl border border-border bg-surface p-5 transition-colors hover:border-accent-line"
+                index={i + 1}
+                className="rounded-xl border border-border bg-surface p-5 hover:border-accent-line hover:shadow-card"
               >
                 <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent">
                   <f.icon size={17} />
