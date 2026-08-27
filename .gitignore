@@ -1,0 +1,51 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+apps/frontend/next-env.d.ts
+apps/backend/generated/
+
+# env files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# testing / coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+
+# misc
+.vercel
+.temp
+.tmp
+*.pid
+*.seed
+*.pid.lock
