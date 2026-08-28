@@ -4,6 +4,15 @@ const config = {
   content: [
     "./app/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
+    "./lib/**/*.{js,ts}",
+  ],
+  // status colours are built as `bg-[var(--st-*)]` in lib/job-status.ts —
+  // safelist them so a class only referenced dynamically is never purged
+  safelist: [
+    "bg-[var(--st-applied)]",
+    "bg-[var(--st-interview)]",
+    "bg-[var(--st-accepted)]",
+    "bg-[var(--st-rejected)]",
   ],
   theme: {
     extend: {
