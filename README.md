@@ -62,4 +62,13 @@ apps/frontend   Next.js app — see apps/frontend/AGENTS.md for Next 16 rules
 - No refresh tokens; access token lifetime is 7 days.
 - The job-detail "Interview prep" panel is a static checklist. AI-generated prep is the
   next planned feature.
-- Deployment: frontend → Vercel, backend → Render, DB already on Supabase.
+
+## Deploying
+
+Frontend → **Vercel**, API → **Render** (`render.yaml`), database → **Supabase** (already
+provisioned). Both hosts auto-redeploy on push to `main`. See **[DEPLOYING.md](DEPLOYING.md)**,
+or run the guided script:
+
+```bash
+bash scripts/deploy-wizard.sh
+```

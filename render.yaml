@@ -1,0 +1,30 @@
+# Render Blueprint — the Rolio API (apps/backend).
+# The frontend deploys separately on Vercel; the database is Supabase.
+#
+# First deploy: in the Render dashboard, create a new Blueprint from this repo,
+# then fill in the three secret env vars below (DATABASE_URL, JWT_SECRET,
+# FRONTEND_URL). See DEPLOYING.md.
+
+services:
+  - type: web
+    name: rolio-api
+    runtime: node
+    plan: free
+    region: oregon
+    autoDeployTrigger: commit
+    branch: main
+    healthCheckPath: /health
+    buildCommand: >-
+      npm ci &&
+      npm run build -w backend &&
+      ( cd apps/backend && npx prisma migrate deploy )
+    startCommand: node apps/backend/dist/main
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
