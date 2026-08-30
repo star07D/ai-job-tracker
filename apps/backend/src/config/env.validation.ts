@@ -26,6 +26,15 @@ class EnvVars {
   @IsOptional()
   @IsInt()
   PORT?: number;
+
+  // Optional — the AI interview-prep feature is disabled until this is set.
+  @IsOptional()
+  @IsString()
+  GEMINI_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  GEMINI_MODEL?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvVars {

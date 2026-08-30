@@ -1,5 +1,13 @@
 import { JobStatus } from "./job-status";
 
+export interface JobPrep {
+  summary: string;
+  likelyQuestions: string[];
+  talkingPoints: string[];
+  research: string[];
+  questionsToAsk: string[];
+}
+
 export interface Job {
   id: string;
   title: string;
@@ -10,6 +18,8 @@ export interface Job {
   notes?: string;
   appliedDate: string;
   createdAt: string;
+  prep?: JobPrep | null;
+  prepGeneratedAt?: string | null;
 }
 
 /**

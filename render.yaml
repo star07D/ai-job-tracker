@@ -28,3 +28,6 @@ services:
         sync: false
       - key: FRONTEND_URL
         sync: false
+      # optional — enables AI interview prep (free key: aistudio.google.com/apikey)
+      - key: GEMINI_API_KEY
+        sync: false

@@ -34,6 +34,7 @@ Render reads [`render.yaml`](render.yaml) (a "Blueprint").
    | `DATABASE_URL` | the Supabase connection string (same as `apps/backend/.env`) |
    | `JWT_SECRET` | a long random string — generate with `openssl rand -base64 48` |
    | `FRONTEND_URL` | leave as `https://placeholder` for now; update in step 3 |
+   | `GEMINI_API_KEY` | *optional* — enables AI interview prep. Free key at <https://aistudio.google.com/apikey>. Leave blank to ship without it. |
 3. Deploy. The build runs `prisma migrate deploy` automatically. When it's live,
    copy the service URL (e.g. `https://rolio-api.onrender.com`) and check
    `https://<that-url>/health` returns `{"status":"ok"}`.

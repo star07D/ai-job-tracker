@@ -29,17 +29,11 @@ import {
   formToJobInput,
   jobToForm,
 } from "@/app/dashboard/components/JobFormDialog";
+import { PrepCard } from "./components/PrepCard";
 
 import { deleteJob, getSingleJob, updateJob } from "@/lib/api";
 import { Job } from "@/lib/types";
 import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
-
-const PREP = [
-  "Research company background",
-  "Prepare STAR-method answers",
-  "Practise technical questions",
-  "Decide on salary expectations",
-];
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -188,27 +182,7 @@ function JobDetailContent() {
             </CardBody>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Interview prep</CardTitle>
-            </CardHeader>
-            <CardBody className="pt-3">
-              <p className="label-mono mb-3 !text-[10px]">
-                Generic for now — AI-tailored prep coming soon
-              </p>
-              <ul className="space-y-2">
-                {PREP.map((p) => (
-                  <li
-                    key={p}
-                    className="flex items-center gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5 text-[13px]"
-                  >
-                    <span className="h-3.5 w-3.5 shrink-0 rounded border-[1.5px] border-border-strong" />
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </CardBody>
-          </Card>
+          <PrepCard job={job} onUpdated={setJob} />
         </div>
 
         <div className="space-y-4">

@@ -113,3 +113,8 @@ export function deleteJob(id: string) {
     method: "DELETE",
   });
 }
+
+/** Generate (or regenerate) AI interview prep for a job. Returns the updated job. */
+export function generatePrep(id: string) {
+  return apiFetch<Job>(`/jobs/${id}/prep`, { method: "POST" });
+}

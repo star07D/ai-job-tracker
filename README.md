@@ -47,10 +47,26 @@ Frontend visual system — "Editorial × Electric":
 - **Primitives:** `apps/frontend/components/ui/*` (button, input, select, card, dialog,
   badge, dropdown, …)
 
+## AI interview prep
+
+The job-detail page can generate interview prep tailored to a role — likely questions,
+talking points, what to research, questions to ask — from the job's details and your notes.
+
+It runs on **Google Gemini's free tier** (Flash models — no credit card). Set it up:
+
+1. Get a free key at <https://aistudio.google.com/apikey>
+2. Add it to `apps/backend/.env`: `GEMINI_API_KEY=...` (optionally `GEMINI_MODEL=`)
+3. Restart. Without the key the feature shows an "not set up" message and nothing else
+   is affected.
+
+The provider is behind an interface (`apps/backend/src/prep/prep.types.ts`) — swapping in
+Claude/OpenAI is one line in `prep.module.ts`. Note: Google may use free-tier prompts to
+improve its products.
+
 ## Layout
 
 ```
-apps/backend    NestJS API — auth, jobs, users, Prisma schema + migrations
+apps/backend    NestJS API — auth, jobs, users, prep (AI), Prisma schema + migrations
 apps/frontend   Next.js app — see apps/frontend/AGENTS.md for Next 16 rules
 .git-archive    pre-consolidation git history of the two original repos (bundles)
 ```
@@ -60,8 +76,6 @@ apps/frontend   Next.js app — see apps/frontend/AGENTS.md for Next 16 rules
 - `GET /jobs` filtering, sorting and pagination are done client-side.
 - The JWT lives in `localStorage`; moving it to an httpOnly cookie is deferred.
 - No refresh tokens; access token lifetime is 7 days.
-- The job-detail "Interview prep" panel is a static checklist. AI-generated prep is the
-  next planned feature.
 
 ## Deploying
 
