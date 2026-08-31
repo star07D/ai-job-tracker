@@ -24,20 +24,43 @@ function handleUnauthorized() {
   }
 }
 
-async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function apiFetch<T>(
+  path: string,
+  options: RequestInit & { timeoutMs?: number } = {},
+): Promise<T> {
+  const { timeoutMs, ...init } = options;
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
+    ...(init.headers as Record<string, string>),
   };
 
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const controller = timeoutMs ? new AbortController() : null;
+  const timer = controller
+    ? setTimeout(() => controller.abort(), timeoutMs)
+    : null;
+
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      ...init,
+      headers,
+      signal: controller?.signal,
+    });
+  } catch (err) {
+    if (controller?.signal.aborted) {
+      throw new ApiError("The request timed out. Please try again.", 408);
+    }
+    throw err;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 
   const data = await res.json().catch(() => null);
 
@@ -116,5 +139,5 @@ export function deleteJob(id: string) {
 
 /** Generate (or regenerate) AI interview prep for a job. Returns the updated job. */
 export function generatePrep(id: string) {
-  return apiFetch<Job>(`/jobs/${id}/prep`, { method: "POST" });
+  return apiFetch<Job>(`/jobs/${id}/prep`, { method: "POST", timeoutMs: 60_000 });
 }

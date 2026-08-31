@@ -9,7 +9,8 @@ import {
   PrepUnavailableError,
 } from './prep.types';
 
-const DEFAULT_MODEL = 'gemini-3.6-flash';
+const DEFAULT_MODEL = 'gemini-3.5-flash';
+const TIMEOUT_MS = 45_000;
 
 const SYSTEM_INSTRUCTION = `You are a sharp interview coach preparing a candidate for one specific role.
 Given the role, company and the candidate's own notes, produce focused, practical prep.
@@ -83,6 +84,9 @@ export class GeminiProvider implements PrepProvider {
       .filter((line) => line !== null)
       .join('\n');
 
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
     let text: string | undefined;
     try {
       const response = await this.client.models.generateContent({
@@ -93,6 +97,7 @@ export class GeminiProvider implements PrepProvider {
           responseMimeType: 'application/json',
           responseSchema: RESPONSE_SCHEMA,
           temperature: 0.7,
+          abortSignal: controller.signal,
         },
       });
       text = response.text;
@@ -102,14 +107,18 @@ export class GeminiProvider implements PrepProvider {
         `Gemini request failed (model=${this.model}): ${detail}`,
       );
       // surface a short, useful hint (the user runs this server themselves)
-      const hint = /not[_ ]?found|no longer available/i.test(detail)
-        ? `model "${this.model}" is unavailable — set GEMINI_MODEL to a current one`
-        : /api[_ ]?key|permission|unauthenticated|401|403/i.test(detail)
-          ? 'the GEMINI_API_KEY was rejected'
-          : /quota|rate|429|503|unavailable/i.test(detail)
-            ? 'the model is rate-limited or busy — try again shortly'
-            : 'request to Gemini failed';
+      const hint = controller.signal.aborted
+        ? 'the model took too long to respond — try again'
+        : /not[_ ]?found|no longer available/i.test(detail)
+          ? `model "${this.model}" is unavailable — set GEMINI_MODEL to a current one`
+          : /api[_ ]?key|permission|unauthenticated|401|403/i.test(detail)
+            ? 'the GEMINI_API_KEY was rejected'
+            : /quota|rate|429|503|unavailable/i.test(detail)
+              ? 'the model is rate-limited or busy — try again shortly'
+              : 'request to Gemini failed';
       throw new PrepGenerationError(hint);
+    } finally {
+      clearTimeout(timer);
     }
 
     return this.parse(text);
