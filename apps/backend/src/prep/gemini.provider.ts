@@ -9,7 +9,7 @@ import {
   PrepUnavailableError,
 } from './prep.types';
 
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODEL = 'gemini-3.6-flash';
 
 const SYSTEM_INSTRUCTION = `You are a sharp interview coach preparing a candidate for one specific role.
 Given the role, company and the candidate's own notes, produce focused, practical prep.
@@ -97,10 +97,19 @@ export class GeminiProvider implements PrepProvider {
       });
       text = response.text;
     } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
       this.logger.error(
-        `Gemini request failed: ${err instanceof Error ? err.message : String(err)}`,
+        `Gemini request failed (model=${this.model}): ${detail}`,
       );
-      throw new PrepGenerationError();
+      // surface a short, useful hint (the user runs this server themselves)
+      const hint = /not[_ ]?found|no longer available/i.test(detail)
+        ? `model "${this.model}" is unavailable — set GEMINI_MODEL to a current one`
+        : /api[_ ]?key|permission|unauthenticated|401|403/i.test(detail)
+          ? 'the GEMINI_API_KEY was rejected'
+          : /quota|rate|429|503|unavailable/i.test(detail)
+            ? 'the model is rate-limited or busy — try again shortly'
+            : 'request to Gemini failed';
+      throw new PrepGenerationError(hint);
     }
 
     return this.parse(text);
