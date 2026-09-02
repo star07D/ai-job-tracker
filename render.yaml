@@ -2,15 +2,16 @@
 # The frontend deploys separately on Vercel; the database is Supabase.
 #
 # First deploy: in the Render dashboard, create a new Blueprint from this repo,
-# then fill in the three secret env vars below (DATABASE_URL, JWT_SECRET,
-# FRONTEND_URL). See DEPLOYING.md.
+# then fill in the secret env vars below (DATABASE_URL, JWT_SECRET, FRONTEND_URL,
+# and optionally GEMINI_API_KEY). See DEPLOYING.md.
 
 services:
   - type: web
     name: rolio-api
     runtime: node
     plan: free
-    region: oregon
+    # Frankfurt — closest Render region to the Supabase project (eu-west-1)
+    region: frankfurt
     autoDeployTrigger: commit
     branch: main
     healthCheckPath: /health
