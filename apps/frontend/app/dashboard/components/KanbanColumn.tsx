@@ -20,7 +20,7 @@ export function KanbanColumn({
   const s = statusStyle(status);
 
   return (
-    <div className="flex flex-col rounded-xl border border-border bg-surface-2/50">
+    <div className="flex w-[280px] shrink-0 flex-col rounded-xl border border-border bg-surface-2/50 md:w-auto">
       <div className="flex items-center justify-between px-3 py-2.5">
         <span className="label-mono flex items-center gap-2 !text-[10px] !text-fg-muted">
           <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />

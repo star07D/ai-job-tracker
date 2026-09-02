@@ -24,16 +24,19 @@ export function KanbanBoard({
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        {JOB_STATUSES.map((status) => (
-          <KanbanColumn
-            key={status}
-            status={status}
-            jobs={jobs.filter((j) => j.status === status)}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
+      {/* horizontal scroll — the standard board pattern, and it works at every width */}
+      <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
+        <div className="flex min-w-max gap-3 md:min-w-0 md:grid md:grid-cols-4">
+          {JOB_STATUSES.map((status) => (
+            <KanbanColumn
+              key={status}
+              status={status}
+              jobs={jobs.filter((j) => j.status === status)}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </div>
       </div>
     </DragDropContext>
   );

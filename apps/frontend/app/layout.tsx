@@ -24,13 +24,31 @@ const mono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
 });
 
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : "http://localhost:3000";
+
+const title = "Rolio — the job hunt, under control";
+const description =
+  "Track every job application from applied to offer, with AI-generated interview prep for each role. Light and dark.";
+
 export const metadata: Metadata = {
-  title: {
-    default: "Rolio — the job hunt, under control",
-    template: "%s · Rolio",
+  metadataBase: new URL(siteUrl),
+  title: { default: title, template: "%s · Rolio" },
+  description,
+  applicationName: "Rolio",
+  openGraph: {
+    type: "website",
+    siteName: "Rolio",
+    title,
+    description,
+    url: siteUrl,
   },
-  description:
-    "Track every job application from applied to offer. See where things stand at a glance.",
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export default function RootLayout({

@@ -9,19 +9,11 @@ export function LogoMark({ className }: { className?: string }) {
       aria-hidden="true"
     >
       <rect width="24" height="24" rx="7" fill="var(--accent)" />
-      {/* a planted flag — claim the role */}
       <path
-        d="M8.5 5.25v13.5"
-        stroke="var(--accent-fg)"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M8.5 6.25h8l-2.4 3 2.4 3h-8"
+        fillRule="evenodd"
+        clipRule="evenodd"
         fill="var(--accent-fg)"
-        stroke="var(--accent-fg)"
-        strokeWidth="1.4"
-        strokeLinejoin="round"
+        d="M6 5.5h7.6c3 0 5 2 5 5 0 2.3-1.3 4.1-3.4 4.9l3.7 3.1h-4.3l-3.2-3H9.5v3H6V5.5Zm3.5 2.8v4h3.6c1.5 0 2.4-.9 2.4-2s-.9-2-2.4-2H9.5Z"
       />
     </svg>
   );
