@@ -19,8 +19,9 @@
     "build:backend": "npm run build -w backend",
     "build:frontend": "npm run build -w frontend",
     "lint": "npm run lint -w backend && npm run lint -w frontend",
-    "test": "npm run test -w backend",
-    "test:backend": "npm run test -w backend"
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "test:backend": "npm run test -w backend",
+    "test:frontend": "npm run test -w frontend"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

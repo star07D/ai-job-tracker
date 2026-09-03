@@ -37,7 +37,8 @@ Open <http://localhost:3000>. `/` is the marketing page; `/dashboard` requires a
 | `npm run dev:backend` / `npm run dev:frontend` | one side only |
 | `npm run build` | production build of both |
 | `npm run lint` | eslint both |
-| `npm test` | backend Jest suite |
+| `npm test` | backend (Jest) + frontend (Vitest) suites |
+| `npm run test:backend` / `npm run test:frontend` | one suite only |
 
 Per-workspace scripts still work with `-w`, e.g. `npm run start:dev -w backend`.
 

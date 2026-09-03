@@ -16,7 +16,8 @@ apps/frontend   Next.js 16 + React 19 + Tailwind 3                 (port 3000)
 | Run one | `npm run dev:backend` / `npm run dev:frontend` |
 | Build | `npm run build` |
 | Lint | `npm run lint` |
-| Backend tests | `npm test` (alias for `npm run test -w backend`) |
+| Tests (both) | `npm test` — backend Jest, then frontend Vitest |
+| One side | `npm run test:backend` / `npm run test:frontend` |
 | Any workspace script | `npm run <script> -w backend` / `-w frontend` |
 
 ## Conventions
