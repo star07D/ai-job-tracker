@@ -30,5 +30,7 @@ model Job {
   salary           String?
   prep             Json?
   prepGeneratedAt  DateTime?
+  nextAction       String?
+  nextActionDue    DateTime?
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

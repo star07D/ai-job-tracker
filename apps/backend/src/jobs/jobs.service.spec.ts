@@ -29,6 +29,8 @@ describe('JobsService', () => {
         company: 'Acme',
         status: 'Applied',
         appliedDate: '2026-01-02T00:00:00.000Z',
+        nextAction: 'Email the recruiter',
+        nextActionDue: '2026-01-09T00:00:00.000Z',
       });
 
       expect(prisma.job.create).toHaveBeenCalledWith({
@@ -36,6 +38,8 @@ describe('JobsService', () => {
           title: 'Dev',
           company: 'Acme',
           appliedDate: '2026-01-02T00:00:00.000Z',
+          nextAction: 'Email the recruiter',
+          nextActionDue: '2026-01-09T00:00:00.000Z',
           user: { connect: { id: 'u1' } },
         }),
       });

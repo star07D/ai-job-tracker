@@ -4,8 +4,9 @@
 *(the API is on a free tier that sleeps when idle — the first request after a quiet spell takes ~30s)*
 
 A job-application tracker: register/login, per-user job CRUD with a list **and** kanban
-board, a pipeline overview with per-stage stats and a chart, a per-job detail page, and
-AI-generated interview prep. Light and dark themes.
+board, a pipeline overview with per-stage stats and a chart, a per-job detail page,
+follow-up reminders (a "next step" + due date per role, surfaced in a dashboard "Needs
+attention" strip), and AI-generated interview prep. Light and dark themes.
 
 Monorepo with two npm workspaces:
 

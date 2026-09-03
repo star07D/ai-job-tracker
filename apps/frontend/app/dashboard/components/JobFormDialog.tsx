@@ -18,6 +18,8 @@ export interface JobFormValues {
   notes: string;
   status: JobStatus;
   appliedDate: string;
+  nextAction: string;
+  nextActionDue: string;
 }
 
 export const EMPTY_JOB_FORM: JobFormValues = {
@@ -28,6 +30,8 @@ export const EMPTY_JOB_FORM: JobFormValues = {
   notes: "",
   status: "Applied",
   appliedDate: "",
+  nextAction: "",
+  nextActionDue: "",
 };
 
 export function jobToForm(job: Job): JobFormValues {
@@ -39,6 +43,8 @@ export function jobToForm(job: Job): JobFormValues {
     notes: job.notes || "",
     status: job.status,
     appliedDate: job.appliedDate ? job.appliedDate.slice(0, 10) : "",
+    nextAction: job.nextAction || "",
+    nextActionDue: job.nextActionDue ? job.nextActionDue.slice(0, 10) : "",
   };
 }
 
@@ -53,6 +59,10 @@ export function formToJobInput(v: JobFormValues): JobInput {
     appliedDate: v.appliedDate
       ? new Date(v.appliedDate).toISOString()
       : undefined,
+    nextAction: v.nextAction.trim() || null,
+    nextActionDue: v.nextActionDue
+      ? new Date(v.nextActionDue).toISOString()
+      : null,
   };
 }
 
@@ -161,6 +171,27 @@ export function JobFormDialog({
               max={today}
               value={values.appliedDate}
               onChange={(e) => set("appliedDate", e.target.value)}
+              className="[color-scheme:light] dark:[color-scheme:dark]"
+            />
+          </Field>
+          <Field
+            label="Next step"
+            htmlFor="jf-next-action"
+            hint="Optional — what you need to do next for this role"
+          >
+            <Input
+              id="jf-next-action"
+              value={values.nextAction}
+              onChange={(e) => set("nextAction", e.target.value)}
+              placeholder="Follow up with the recruiter"
+            />
+          </Field>
+          <Field label="Due" htmlFor="jf-next-due" hint="When to do it by">
+            <Input
+              id="jf-next-due"
+              type="date"
+              value={values.nextActionDue}
+              onChange={(e) => set("nextActionDue", e.target.value)}
               className="[color-scheme:light] dark:[color-scheme:dark]"
             />
           </Field>

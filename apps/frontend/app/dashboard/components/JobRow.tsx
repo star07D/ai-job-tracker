@@ -6,6 +6,8 @@ import { MoreHorizontal, Pencil, Trash2, ArrowUpRight } from "lucide-react";
 import { Job } from "@/lib/types";
 import { StatusBadge } from "@/components/ui/badge";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
+import { dueInfo, dueToneClass } from "@/lib/due";
+import { cn } from "@/lib/cn";
 
 function formatDate(iso: string) {
   return new Date(iso)
@@ -23,6 +25,10 @@ export function JobRow({
   onDelete: (job: Job) => void;
 }) {
   const router = useRouter();
+  const due =
+    job.nextActionDue && dueInfo(job.nextActionDue).days <= 7
+      ? dueInfo(job.nextActionDue)
+      : null;
 
   return (
     <div className="group relative flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2">
@@ -36,8 +42,20 @@ export function JobRow({
             className="shrink-0 text-fg-subtle opacity-0 transition-opacity group-hover:opacity-100"
           />
         </div>
-        <div className="mt-0.5 truncate text-[12.5px] text-fg-muted">
-          {[job.company, job.location, job.salary].filter(Boolean).join(" · ")}
+        <div className="mt-0.5 flex items-center gap-2 truncate text-[12.5px] text-fg-muted">
+          <span className="truncate">
+            {[job.company, job.location, job.salary].filter(Boolean).join(" · ")}
+          </span>
+          {due && (
+            <span
+              className={cn(
+                "font-data shrink-0 text-[11px] font-semibold",
+                dueToneClass(due.tone),
+              )}
+            >
+              · {due.label}
+            </span>
+          )}
         </div>
       </Link>
 

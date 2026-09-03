@@ -17,6 +17,8 @@ export class JobsService {
         salary: data.salary,
         notes: data.notes,
         appliedDate: data.appliedDate,
+        nextAction: data.nextAction,
+        nextActionDue: data.nextActionDue,
 
         user: {
           connect: {

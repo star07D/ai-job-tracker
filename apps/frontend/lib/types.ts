@@ -20,6 +20,10 @@ export interface Job {
   createdAt: string;
   prep?: JobPrep | null;
   prepGeneratedAt?: string | null;
+  /** Free-text next step, e.g. "Email recruiter about timeline". */
+  nextAction?: string | null;
+  /** ISO date the next step is due. Drives the "Needs attention" strip. */
+  nextActionDue?: string | null;
 }
 
 /**

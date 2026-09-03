@@ -1,4 +1,10 @@
-import { IsIn, IsISO8601, IsOptional, IsString } from 'class-validator';
+import {
+  IsIn,
+  IsISO8601,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 import { JOB_STATUSES } from '../job-status';
 import type { JobStatus } from '../job-status';
 
@@ -27,4 +33,13 @@ export class CreateJobDto {
   @IsOptional()
   @IsISO8601()
   appliedDate?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  nextAction?: string | null;
+
+  @IsOptional()
+  @IsISO8601()
+  nextActionDue?: string | null;
 }

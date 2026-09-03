@@ -30,6 +30,7 @@ import {
   jobToForm,
 } from "@/app/dashboard/components/JobFormDialog";
 import { PrepCard } from "./components/PrepCard";
+import { NextStep } from "./components/NextStep";
 
 import { deleteJob, getSingleJob, updateJob } from "@/lib/api";
 import { Job } from "@/lib/types";
@@ -165,7 +166,13 @@ function JobDetailContent() {
         </CardBody>
       </Reveal>
 
-      <Reveal index={1} className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
+      {(job.nextAction || job.nextActionDue) && (
+        <Reveal index={1} className="mt-4 block">
+          <NextStep job={job} onUpdated={setJob} />
+        </Reveal>
+      )}
+
+      <Reveal index={2} className="mt-4 grid gap-4 lg:grid-cols-[1.7fr_1fr]">
         <div className="space-y-4">
           <Card>
             <CardHeader>

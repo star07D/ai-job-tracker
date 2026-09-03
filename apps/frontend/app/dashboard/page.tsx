@@ -16,6 +16,7 @@ import { Pipeline } from "./components/Pipeline";
 import { Toolbar, DashboardView } from "./components/Toolbar";
 import { JobRow } from "./components/JobRow";
 import { KanbanBoard } from "./components/KanbanBoard";
+import { NeedsAttention } from "./components/NeedsAttention";
 import {
   JobFormDialog,
   JobFormValues,
@@ -25,6 +26,7 @@ import {
 
 import { createJob, deleteJob, getJobs, updateJob } from "@/lib/api";
 import { Job } from "@/lib/types";
+import { needsAttention } from "@/lib/due";
 import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -132,6 +134,11 @@ function DashboardContent() {
     return list;
   }, [jobs, search, filterStatus, sortBy]);
 
+  const hasAttention = useMemo(
+    () => jobs.some((j) => needsAttention(j.nextActionDue)),
+    [jobs],
+  );
+
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
     for (const s of JOB_STATUSES) c[s] = jobs.filter((j) => j.status === s).length;
@@ -156,6 +163,12 @@ function DashboardContent() {
             <Plus size={15} /> Add application
           </Button>
         </Reveal>
+
+        {!loading && !loadError && hasAttention && (
+          <Reveal index={1} className="mt-6 block">
+            <NeedsAttention jobs={jobs} />
+          </Reveal>
+        )}
 
         <Reveal index={1} className="mt-6 block">
           <Pipeline counts={counts} total={jobs.length} />
