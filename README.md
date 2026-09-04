@@ -8,6 +8,11 @@ board, a pipeline overview with per-stage stats and a chart, a per-job detail pa
 follow-up reminders (a "next step" + due date per role, surfaced in a dashboard "Needs
 attention" strip), and AI-generated interview prep. Light and dark themes.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
+  <img alt="Rolio dashboard — applications list, follow-up reminders, and pipeline stats" src="docs/dashboard-light.png">
+</picture>
+
 Monorepo with two npm workspaces:
 
 | Workspace | Path | Stack | Port |
@@ -56,6 +61,8 @@ Frontend visual system — "Editorial × Electric":
 
 The job-detail page can generate interview prep tailored to a role — likely questions,
 talking points, what to research, questions to ask — from the job's details and your notes.
+
+![AI-generated interview prep on the job-detail page](docs/job-prep-light.png)
 
 It runs on **Google Gemini's free tier** (Flash models — no credit card). Set it up:
 
