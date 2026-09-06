@@ -44,6 +44,7 @@ Open <http://localhost:3000>. `/` is the marketing page; `/dashboard` requires a
 | `npm run lint` | eslint both |
 | `npm test` | backend (Jest) + frontend (Vitest) suites |
 | `npm run test:backend` / `npm run test:frontend` | one suite only |
+| `npm run e2e` | Playwright browser journey (needs Docker for a throwaway Postgres) |
 
 Per-workspace scripts still work with `-w`, e.g. `npm run start:dev -w backend`.
 

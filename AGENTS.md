@@ -18,7 +18,12 @@ apps/frontend   Next.js 16 + React 19 + Tailwind 3                 (port 3000)
 | Lint | `npm run lint` |
 | Tests (both) | `npm test` — backend Jest, then frontend Vitest |
 | One side | `npm run test:backend` / `npm run test:frontend` |
+| E2E (Playwright) | `npm run e2e` — starts a throwaway Postgres, builds, runs the browser journey |
 | Any workspace script | `npm run <script> -w backend` / `-w frontend` |
+
+`npm run e2e` needs Docker (for the disposable DB) and free ports 3000/4000 — stop
+`npm run dev` first. To use your own Postgres instead, set `E2E_DATABASE_URL` and run
+`npm run test:e2e` directly. Spec + config live in `e2e/` and `playwright.config.ts`.
 
 ## Conventions
 

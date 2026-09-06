@@ -30,6 +30,12 @@ yarn-error.log*
 coverage/
 .nyc_output/
 
+# playwright (e2e)
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
 # OS
 .DS_Store
 Thumbs.db

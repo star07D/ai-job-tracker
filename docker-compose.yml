@@ -1,0 +1,19 @@
+# Local Postgres for the end-to-end tests (and handy for local dev if you'd
+# rather not point at Supabase). Data lives in tmpfs, so it's wiped when the
+# container stops — exactly what we want for a clean e2e run.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rolio
+      POSTGRES_PASSWORD: rolio
+      POSTGRES_DB: rolio_e2e
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rolio -d rolio_e2e"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
