@@ -8,9 +8,11 @@ import { cn } from "@/lib/cn";
 export function Pipeline({
   counts,
   total,
+  stale = 0,
 }: {
   counts: Record<string, number>;
   total: number;
+  stale?: number;
 }) {
   const max = Math.max(1, ...JOB_STATUSES.map((s) => counts[s] ?? 0));
   const responded =
@@ -71,6 +73,14 @@ export function Pipeline({
         {responseRate}% response rate
         <span className="mx-2 text-fg-subtle">·</span>
         {responded} of {total} heard back
+        {stale > 0 && (
+          <>
+            <span className="mx-2 text-fg-subtle">·</span>
+            <span className="font-semibold text-[var(--st-interview)]">
+              {stale} gone quiet
+            </span>
+          </>
+        )}
       </div>
     </Card>
   );

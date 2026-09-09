@@ -10,6 +10,7 @@ import {
   MapPin,
   Banknote,
   CalendarDays,
+  Clock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -34,7 +35,9 @@ import { NextStep } from "./components/NextStep";
 
 import { deleteJob, getSingleJob, updateJob } from "@/lib/api";
 import { Job } from "@/lib/types";
+import { isStale, stageInfo } from "@/lib/stale";
 import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
+import { cn } from "@/lib/cn";
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -147,6 +150,14 @@ function JobDetailContent() {
               <span className="inline-flex items-center gap-1.5">
                 <CalendarDays size={12} /> Applied {fmt(job.appliedDate)}
               </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5",
+                  isStale(job) && "text-[var(--st-interview)]",
+                )}
+              >
+                <Clock size={12} /> {stageInfo(job).label} in {job.status}
+              </span>
             </div>
           </div>
 
@@ -226,7 +237,10 @@ function JobDetailContent() {
               {[
                 ["Added", fmt(job.createdAt)],
                 ["Applied", fmt(job.appliedDate)],
-                ["Status", job.status],
+                [
+                  `In ${job.status}`,
+                  `${fmt(job.statusChangedAt)} · ${stageInfo(job).label}`,
+                ],
               ].map(([k, v], i) => (
                 <div
                   key={k}

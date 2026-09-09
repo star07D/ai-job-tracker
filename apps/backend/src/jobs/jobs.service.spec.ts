@@ -38,6 +38,7 @@ describe('JobsService', () => {
           title: 'Dev',
           company: 'Acme',
           appliedDate: '2026-01-02T00:00:00.000Z',
+          statusChangedAt: '2026-01-02T00:00:00.000Z',
           nextAction: 'Email the recruiter',
           nextActionDue: '2026-01-09T00:00:00.000Z',
           user: { connect: { id: 'u1' } },
@@ -85,6 +86,34 @@ describe('JobsService', () => {
       expect(prisma.job.update).toHaveBeenCalledWith({
         where: { id: 'j1' },
         data: { title: 'x' },
+      });
+    });
+
+    it('stamps statusChangedAt when the status actually changes', async () => {
+      prisma.job.findFirst.mockResolvedValue({
+        id: 'j1',
+        userId: 'u1',
+        status: 'Applied',
+      });
+      prisma.job.update.mockResolvedValue({ id: 'j1' });
+      await service.update('j1', 'u1', { status: 'Interview' });
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'j1' },
+        data: { status: 'Interview', statusChangedAt: expect.any(Date) },
+      });
+    });
+
+    it('leaves statusChangedAt alone for a non-status edit', async () => {
+      prisma.job.findFirst.mockResolvedValue({
+        id: 'j1',
+        userId: 'u1',
+        status: 'Applied',
+      });
+      prisma.job.update.mockResolvedValue({ id: 'j1' });
+      await service.update('j1', 'u1', { status: 'Applied', notes: 'hi' });
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'j1' },
+        data: { status: 'Applied', notes: 'hi' },
       });
     });
   });

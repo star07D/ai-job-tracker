@@ -27,6 +27,8 @@ export interface Job {
   notes?: string;
   appliedDate: string;
   createdAt: string;
+  /** When the job last moved to its current status. Drives staleness. */
+  statusChangedAt: string;
   prep?: JobPrep | null;
   prepGeneratedAt?: string | null;
   /** Free-text next step, e.g. "Email recruiter about timeline". */
@@ -39,7 +41,10 @@ export interface Job {
  * Fields the client sends when creating/updating a job. `appliedDate` is
  * optional — the backend defaults it to "now" when omitted.
  */
-export type JobInput = Omit<Job, "id" | "createdAt" | "appliedDate"> & {
+export type JobInput = Omit<
+  Job,
+  "id" | "createdAt" | "statusChangedAt" | "appliedDate"
+> & {
   appliedDate?: string;
 };
 

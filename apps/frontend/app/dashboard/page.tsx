@@ -27,6 +27,7 @@ import {
 import { createJob, deleteJob, getJobs, updateJob } from "@/lib/api";
 import { Job } from "@/lib/types";
 import { needsAttention } from "@/lib/due";
+import { staleCount } from "@/lib/stale";
 import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -145,6 +146,8 @@ function DashboardContent() {
     return c;
   }, [jobs]);
 
+  const stale = useMemo(() => staleCount(jobs), [jobs]);
+
   return (
     <div className="min-h-screen bg-bg">
       <AppTopbar search={search} onSearch={setSearch} />
@@ -171,7 +174,7 @@ function DashboardContent() {
         )}
 
         <Reveal index={1} className="mt-6 block">
-          <Pipeline counts={counts} total={jobs.length} />
+          <Pipeline counts={counts} total={jobs.length} stale={stale} />
         </Reveal>
 
         <Reveal index={2} className="mt-8 block">

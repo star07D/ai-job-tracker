@@ -17,6 +17,8 @@ export class JobsService {
         salary: data.salary,
         notes: data.notes,
         appliedDate: data.appliedDate,
+        // a backdated application has been sitting in its stage since then
+        statusChangedAt: data.appliedDate,
         nextAction: data.nextAction,
         nextActionDue: data.nextActionDue,
 
@@ -56,11 +58,17 @@ export class JobsService {
   }
 
   async update(id: string, userId: string, data: UpdateJobDto) {
-    await this.findOne(id, userId);
+    const existing = await this.findOne(id, userId);
+
+    const statusChanged =
+      data.status !== undefined && data.status !== existing.status;
 
     return this.prisma.job.update({
       where: { id },
-      data,
+      data: {
+        ...data,
+        ...(statusChanged ? { statusChangedAt: new Date() } : {}),
+      },
     });
   }
 

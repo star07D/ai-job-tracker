@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { Job } from "@/lib/types";
 import { dueInfo, dueToneClass } from "@/lib/due";
+import { isStale, stageInfo } from "@/lib/stale";
 import { cn } from "@/lib/cn";
 
 function shortDate(iso: string) {
@@ -30,6 +31,8 @@ export function KanbanCard({
     job.nextActionDue && dueInfo(job.nextActionDue).days <= 7
       ? dueInfo(job.nextActionDue)
       : null;
+  const stage = stageInfo(job);
+  const showStale = isStale(job);
 
   return (
     <Draggable draggableId={job.id} index={index}>
@@ -83,6 +86,11 @@ export function KanbanCard({
               {due && (
                 <span className={cn("font-semibold", dueToneClass(due.tone))}>
                   {due.label}
+                </span>
+              )}
+              {showStale && (
+                <span className="font-semibold text-[var(--st-interview)]">
+                  {stage.label} in {job.status}
                 </span>
               )}
             </div>

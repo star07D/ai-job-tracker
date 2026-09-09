@@ -36,6 +36,7 @@ const job: Job = {
   notes: "spoke to recruiter",
   appliedDate: "2026-08-01T00:00:00.000Z",
   createdAt: "2026-08-01T00:00:00.000Z",
+  statusChangedAt: "2026-08-01T00:00:00.000Z",
   nextAction: "Send thank-you note",
   nextActionDue: "2026-09-10T00:00:00.000Z",
 };

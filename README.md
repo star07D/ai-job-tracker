@@ -6,8 +6,9 @@
 A job-application tracker: register/login, per-user job CRUD with a list **and** kanban
 board, a pipeline overview with per-stage stats and a chart, a per-job detail page,
 follow-up reminders (a "next step" + due date per role, surfaced in a dashboard "Needs
-attention" strip), and two AI touches — interview prep per role, and autofilling a new
-application from a pasted job description. Light and dark themes.
+attention" strip), staleness flags on applications that have gone quiet in a stage, and
+two AI touches — interview prep per role, and autofilling a new application from a pasted
+job description. Light and dark themes.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">

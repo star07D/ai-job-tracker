@@ -7,6 +7,7 @@ import { Job } from "@/lib/types";
 import { StatusBadge } from "@/components/ui/badge";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { dueInfo, dueToneClass } from "@/lib/due";
+import { isStale, stageInfo } from "@/lib/stale";
 import { cn } from "@/lib/cn";
 
 function formatDate(iso: string) {
@@ -29,6 +30,8 @@ export function JobRow({
     job.nextActionDue && dueInfo(job.nextActionDue).days <= 7
       ? dueInfo(job.nextActionDue)
       : null;
+  const stage = stageInfo(job);
+  const showStale = isStale(job);
 
   return (
     <div className="group relative flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2">
@@ -54,6 +57,11 @@ export function JobRow({
               )}
             >
               · {due.label}
+            </span>
+          )}
+          {showStale && (
+            <span className="font-data shrink-0 text-[11px] font-semibold text-[var(--st-interview)]">
+              · {stage.label} in {job.status}
             </span>
           )}
         </div>

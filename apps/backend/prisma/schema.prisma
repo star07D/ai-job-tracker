@@ -25,6 +25,7 @@ model Job {
   userId           String
   createdAt        DateTime  @default(now())
   appliedDate      DateTime  @default(now())
+  statusChangedAt  DateTime  @default(now())
   location         String?
   notes            String?
   salary           String?
