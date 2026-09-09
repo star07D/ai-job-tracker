@@ -6,7 +6,8 @@
 A job-application tracker: register/login, per-user job CRUD with a list **and** kanban
 board, a pipeline overview with per-stage stats and a chart, a per-job detail page,
 follow-up reminders (a "next step" + due date per role, surfaced in a dashboard "Needs
-attention" strip), and AI-generated interview prep. Light and dark themes.
+attention" strip), and two AI touches — interview prep per role, and autofilling a new
+application from a pasted job description. Light and dark themes.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
@@ -58,10 +59,15 @@ Frontend visual system — "Editorial × Electric":
 - **Primitives:** `apps/frontend/components/ui/*` (button, input, select, card, dialog,
   badge, dropdown, …)
 
-## AI interview prep
+## AI features
 
-The job-detail page can generate interview prep tailored to a role — likely questions,
-talking points, what to research, questions to ask — from the job's details and your notes.
+Two things, both on **Google Gemini's free tier**:
+
+- **Interview prep** — the job-detail page generates prep tailored to a role: likely
+  questions, talking points, what to research, questions to ask — from the job's details
+  and your notes.
+- **Autofill from a job description** — paste a posting into the "Add application" dialog
+  and it fills in the role, company, location, salary and a few notes for you to review.
 
 ![AI-generated interview prep on the job-detail page](docs/job-prep-light.png)
 

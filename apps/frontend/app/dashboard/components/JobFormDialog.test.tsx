@@ -8,14 +8,22 @@ import {
   jobToForm,
   JobFormDialog,
 } from "./JobFormDialog";
+import { ApiError, parseJobDescription } from "@/lib/api";
 import type { Job } from "@/lib/types";
 
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 vi.mock("react-hot-toast", () => ({ default: toast }));
 
+vi.mock("@/lib/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api")>()),
+  parseJobDescription: vi.fn(),
+}));
+const mockParse = vi.mocked(parseJobDescription);
+
 beforeEach(() => {
   toast.error.mockReset();
   toast.success.mockReset();
+  mockParse.mockReset();
 });
 
 const job: Job = {
@@ -104,6 +112,46 @@ describe("<JobFormDialog />", () => {
 
     expect(onSubmit).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledWith("Role and company are required.");
+  });
+
+  it("autofills the form from a pasted description", async () => {
+    mockParse.mockResolvedValue({
+      title: "Senior Platform Engineer",
+      company: "Fly.io",
+      salary: "$190k–230k",
+    });
+    render(
+      <JobFormDialog open initial={null} onClose={vi.fn()} onSubmit={vi.fn()} />,
+    );
+
+    await userEvent.type(
+      screen.getByLabelText("Paste a job description"),
+      "Senior Platform Engineer at Fly.io — remote, hiring now",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+
+    expect(mockParse).toHaveBeenCalledOnce();
+    expect(screen.getByLabelText("Role")).toHaveValue("Senior Platform Engineer");
+    expect(screen.getByLabelText("Company")).toHaveValue("Fly.io");
+    expect(screen.getByLabelText("Salary")).toHaveValue("$190k–230k");
+    expect(toast.success).toHaveBeenCalled();
+  });
+
+  it("shows a hint when AI autofill isn't set up on the server", async () => {
+    mockParse.mockRejectedValue(new ApiError("not configured", 503));
+    render(
+      <JobFormDialog open initial={null} onClose={vi.fn()} onSubmit={vi.fn()} />,
+    );
+
+    await userEvent.type(
+      screen.getByLabelText("Paste a job description"),
+      "some job posting text long enough to enable the button",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Autofill" }));
+
+    expect(
+      await screen.findByText(/autofill isn.t set up/i),
+    ).toBeInTheDocument();
   });
 
   it("submits the entered values, including the next step", async () => {

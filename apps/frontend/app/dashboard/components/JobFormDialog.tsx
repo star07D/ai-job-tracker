@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { Sparkles } from "lucide-react";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Field } from "@/components/ui/field";
 import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
+import { ApiError, parseJobDescription } from "@/lib/api";
 import { Job, JobInput } from "@/lib/types";
 
 export interface JobFormValues {
@@ -81,12 +83,48 @@ export function JobFormDialog({
   const [values, setValues] = useState<JobFormValues>(EMPTY_JOB_FORM);
   const [saving, setSaving] = useState(false);
 
+  const [paste, setPaste] = useState("");
+  const [parsing, setParsing] = useState(false);
+  const [aiUnavailable, setAiUnavailable] = useState(false);
+
   useEffect(() => {
-    if (open) setValues(initial ?? EMPTY_JOB_FORM);
+    if (!open) return;
+    setValues(initial ?? EMPTY_JOB_FORM);
+    setPaste("");
+    setParsing(false);
+    setAiUnavailable(false);
   }, [open, initial]);
 
   function set<K extends keyof JobFormValues>(key: K, val: JobFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: val }));
+  }
+
+  async function runAutofill() {
+    setParsing(true);
+    try {
+      const parsed = await parseJobDescription(paste);
+      setValues((prev) => ({
+        ...prev,
+        ...(parsed.title ? { title: parsed.title } : {}),
+        ...(parsed.company ? { company: parsed.company } : {}),
+        ...(parsed.location ? { location: parsed.location } : {}),
+        ...(parsed.salary ? { salary: parsed.salary } : {}),
+        ...(parsed.notes ? { notes: parsed.notes } : {}),
+      }));
+      toast.success("Filled in — give it a once-over.");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 503) {
+        setAiUnavailable(true);
+      } else if (err instanceof ApiError && err.status === 429) {
+        toast.error("Slow down a moment, then try again.");
+      } else {
+        toast.error(
+          err instanceof Error ? err.message : "Couldn't read that description.",
+        );
+      }
+    } finally {
+      setParsing(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -115,6 +153,38 @@ export function JobFormDialog({
     >
       <form onSubmit={handleSubmit}>
         <DialogBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {!isEditing && (
+            <div className="rounded-lg border border-dashed border-border-strong bg-surface-2/40 p-3 sm:col-span-2">
+              <label htmlFor="jf-paste" className="label-mono !text-[11px]">
+                Paste a job description
+              </label>
+              <Textarea
+                id="jf-paste"
+                value={paste}
+                onChange={(e) => setPaste(e.target.value)}
+                placeholder="Paste the full posting — AI fills in the role, company, salary and a few notes. You can edit all of it after."
+                className="mt-1.5 min-h-[68px]"
+              />
+              <div className="mt-2 flex items-center justify-end">
+                {aiUnavailable ? (
+                  <span className="label-mono !text-[10px] !normal-case !tracking-normal">
+                    AI autofill isn&apos;t set up on this server.
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={runAutofill}
+                    loading={parsing}
+                    disabled={paste.trim().length < 20}
+                  >
+                    <Sparkles size={14} /> Autofill
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
           <Field label="Role" htmlFor="jf-title" className="sm:col-span-2">
             <Input
               id="jf-title"

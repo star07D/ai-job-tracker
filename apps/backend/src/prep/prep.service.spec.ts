@@ -35,6 +35,7 @@ describe('PrepService', () => {
     provider = {
       isConfigured: jest.fn().mockReturnValue(true),
       generate: jest.fn(),
+      extractJob: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

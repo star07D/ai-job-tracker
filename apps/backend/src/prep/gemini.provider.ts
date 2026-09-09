@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { GoogleGenAI, Type } from '@google/genai';
 import {
   JobPrep,
+  ParsedJob,
   PrepGenerationError,
   PrepInput,
   PrepProvider,
@@ -12,7 +13,7 @@ import {
 const DEFAULT_MODEL = 'gemini-3.5-flash';
 const TIMEOUT_MS = 45_000;
 
-const SYSTEM_INSTRUCTION = `You are a sharp interview coach preparing a candidate for one specific role.
+const PREP_INSTRUCTION = `You are a sharp interview coach preparing a candidate for one specific role.
 Given the role, company and the candidate's own notes, produce focused, practical prep.
 
 Rules:
@@ -25,7 +26,7 @@ Rules:
 - "questionsToAsk" are thoughtful questions the candidate should ask the interviewer.
 - Keep each list item to one or two sentences.`;
 
-const RESPONSE_SCHEMA = {
+const PREP_SCHEMA = {
   type: Type.OBJECT,
   properties: {
     summary: { type: Type.STRING },
@@ -50,6 +51,30 @@ const RESPONSE_SCHEMA = {
   ],
 };
 
+const EXTRACT_INSTRUCTION = `You extract structured fields from a job posting. Return ONLY what the
+posting explicitly states — never guess, infer or invent.
+
+- title: the role title, as written
+- company: the hiring company's name (not the recruiting agency, if you can tell them apart)
+- location: as written — e.g. "Remote", "Remote (US)", "London, UK", "Hybrid — Berlin"
+- salary: the pay range exactly as written, including currency and period
+- notes: 2 to 4 short lines covering the core responsibilities and the must-have
+  requirements — a quick reference for the candidate, not a summary of the whole posting
+
+Omit any field the posting does not mention.`;
+
+const EXTRACT_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    title: { type: Type.STRING, nullable: true },
+    company: { type: Type.STRING, nullable: true },
+    location: { type: Type.STRING, nullable: true },
+    salary: { type: Type.STRING, nullable: true },
+    notes: { type: Type.STRING, nullable: true },
+  },
+  propertyOrdering: ['title', 'company', 'location', 'salary', 'notes'],
+};
+
 @Injectable()
 export class GeminiProvider implements PrepProvider {
   private readonly logger = new Logger(GeminiProvider.name);
@@ -67,10 +92,6 @@ export class GeminiProvider implements PrepProvider {
   }
 
   async generate(input: PrepInput): Promise<JobPrep> {
-    if (!this.client) {
-      throw new PrepUnavailableError();
-    }
-
     const contents = [
       `Role: ${input.title}`,
       `Company: ${input.company}`,
@@ -84,23 +105,52 @@ export class GeminiProvider implements PrepProvider {
       .filter((line) => line !== null)
       .join('\n');
 
+    const text = await this.request(contents, {
+      systemInstruction: PREP_INSTRUCTION,
+      responseSchema: PREP_SCHEMA,
+      temperature: 0.7,
+    });
+
+    return this.parsePrep(text);
+  }
+
+  async extractJob(description: string): Promise<ParsedJob> {
+    const text = await this.request(`Job posting:\n\n${description.trim()}`, {
+      systemInstruction: EXTRACT_INSTRUCTION,
+      responseSchema: EXTRACT_SCHEMA,
+      temperature: 0.2,
+    });
+
+    return this.parseExtract(text);
+  }
+
+  /** Single round-trip to Gemini: enforces the timeout and turns failures into a hint. */
+  private async request(
+    contents: string,
+    cfg: {
+      systemInstruction: string;
+      responseSchema: object;
+      temperature: number;
+    },
+  ): Promise<string | undefined> {
+    if (!this.client) {
+      throw new PrepUnavailableError();
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    let text: string | undefined;
     try {
       const response = await this.client.models.generateContent({
         model: this.model,
         contents,
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          ...cfg,
           responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-          temperature: 0.7,
           abortSignal: controller.signal,
         },
       });
-      text = response.text;
+      return response.text;
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
       this.logger.error(
@@ -120,23 +170,10 @@ export class GeminiProvider implements PrepProvider {
     } finally {
       clearTimeout(timer);
     }
-
-    return this.parse(text);
   }
 
-  private parse(text: string | undefined): JobPrep {
-    if (!text) {
-      throw new PrepGenerationError('Empty response from the model');
-    }
-
-    let raw: unknown;
-    try {
-      raw = JSON.parse(text);
-    } catch {
-      throw new PrepGenerationError('Model did not return valid JSON');
-    }
-
-    const obj = raw as Record<string, unknown>;
+  private parsePrep(text: string | undefined): JobPrep {
+    const obj = this.parseJson(text);
     const stringArray = (v: unknown): string[] =>
       Array.isArray(v)
         ? v.filter((x): x is string => typeof x === 'string')
@@ -159,5 +196,45 @@ export class GeminiProvider implements PrepProvider {
     }
 
     return prep;
+  }
+
+  private parseExtract(text: string | undefined): ParsedJob {
+    const obj = this.parseJson(text);
+    const str = (v: unknown): string | undefined => {
+      if (typeof v !== 'string') return undefined;
+      const trimmed = v.trim();
+      return trimmed.length > 0 ? trimmed : undefined;
+    };
+
+    const parsed: ParsedJob = {};
+    for (const key of [
+      'title',
+      'company',
+      'location',
+      'salary',
+      'notes',
+    ] as const) {
+      const value = str(obj[key]);
+      if (value) parsed[key] = value;
+    }
+
+    if (Object.keys(parsed).length === 0) {
+      throw new PrepGenerationError(
+        "couldn't find any job details in that text",
+      );
+    }
+
+    return parsed;
+  }
+
+  private parseJson(text: string | undefined): Record<string, unknown> {
+    if (!text) {
+      throw new PrepGenerationError('empty response from the model');
+    }
+    try {
+      return JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      throw new PrepGenerationError('model did not return valid JSON');
+    }
   }
 }

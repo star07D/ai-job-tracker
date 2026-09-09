@@ -15,6 +15,15 @@ export interface PrepInput {
   notes?: string | null;
 }
 
+/** Fields pulled out of a pasted job description — any of them may be absent. */
+export interface ParsedJob {
+  title?: string;
+  company?: string;
+  location?: string;
+  salary?: string;
+  notes?: string;
+}
+
 /** Thrown by a provider that has no credentials configured. */
 export class PrepUnavailableError extends Error {
   constructor(message = 'AI prep is not configured') {
@@ -37,4 +46,6 @@ export interface PrepProvider {
   /** Whether this provider has what it needs to run. */
   isConfigured(): boolean;
   generate(input: PrepInput): Promise<JobPrep>;
+  /** Pull structured fields out of a pasted job description. */
+  extractJob(description: string): Promise<ParsedJob>;
 }

@@ -8,6 +8,15 @@ export interface JobPrep {
   questionsToAsk: string[];
 }
 
+/** Fields the AI pulled out of a pasted job description — any may be missing. */
+export interface ParsedJob {
+  title?: string;
+  company?: string;
+  location?: string;
+  salary?: string;
+  notes?: string;
+}
+
 export interface Job {
   id: string;
   title: string;

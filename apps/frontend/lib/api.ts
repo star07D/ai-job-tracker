@@ -1,4 +1,4 @@
-import { AuthUser, Job, JobInput } from "./types";
+import { AuthUser, Job, JobInput, ParsedJob } from "./types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -140,4 +140,13 @@ export function deleteJob(id: string) {
 /** Generate (or regenerate) AI interview prep for a job. Returns the updated job. */
 export function generatePrep(id: string) {
   return apiFetch<Job>(`/jobs/${id}/prep`, { method: "POST", timeoutMs: 60_000 });
+}
+
+/** Pull structured fields out of a pasted job description. */
+export function parseJobDescription(description: string) {
+  return apiFetch<ParsedJob>("/jobs/parse", {
+    method: "POST",
+    body: JSON.stringify({ description }),
+    timeoutMs: 45_000,
+  });
 }
