@@ -11,6 +11,9 @@ import {
   Banknote,
   CalendarDays,
   Clock,
+  User,
+  Mail,
+  ExternalLink,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -45,6 +48,10 @@ function fmt(iso: string) {
     month: "short",
     year: "numeric",
   });
+}
+
+function linkedinHref(value: string) {
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
 }
 
 function JobDetailContent() {
@@ -228,6 +235,42 @@ function JobDetailContent() {
               </Button>
             </CardBody>
           </Card>
+
+          {(job.contactName || job.contactEmail || job.contactLinkedin) && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact</CardTitle>
+              </CardHeader>
+              <CardBody className="space-y-2.5 pt-3 text-sm">
+                {job.contactName && (
+                  <div className="flex items-center gap-2 font-medium">
+                    <User size={14} className="shrink-0 text-fg-subtle" />
+                    <span className="truncate">{job.contactName}</span>
+                  </div>
+                )}
+                {job.contactEmail && (
+                  <a
+                    href={`mailto:${job.contactEmail}`}
+                    className="flex items-center gap-2 text-accent hover:underline"
+                  >
+                    <Mail size={14} className="shrink-0 text-fg-subtle" />
+                    <span className="truncate">{job.contactEmail}</span>
+                  </a>
+                )}
+                {job.contactLinkedin && (
+                  <a
+                    href={linkedinHref(job.contactLinkedin)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-accent hover:underline"
+                  >
+                    <ExternalLink size={14} className="shrink-0 text-fg-subtle" />
+                    <span className="truncate">{job.contactLinkedin}</span>
+                  </a>
+                )}
+              </CardBody>
+            </Card>
+          )}
 
           <Card>
             <CardHeader>

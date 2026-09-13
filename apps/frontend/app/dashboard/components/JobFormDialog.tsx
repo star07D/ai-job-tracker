@@ -22,6 +22,9 @@ export interface JobFormValues {
   appliedDate: string;
   nextAction: string;
   nextActionDue: string;
+  contactName: string;
+  contactEmail: string;
+  contactLinkedin: string;
 }
 
 export const EMPTY_JOB_FORM: JobFormValues = {
@@ -34,6 +37,9 @@ export const EMPTY_JOB_FORM: JobFormValues = {
   appliedDate: "",
   nextAction: "",
   nextActionDue: "",
+  contactName: "",
+  contactEmail: "",
+  contactLinkedin: "",
 };
 
 export function jobToForm(job: Job): JobFormValues {
@@ -47,6 +53,9 @@ export function jobToForm(job: Job): JobFormValues {
     appliedDate: job.appliedDate ? job.appliedDate.slice(0, 10) : "",
     nextAction: job.nextAction || "",
     nextActionDue: job.nextActionDue ? job.nextActionDue.slice(0, 10) : "",
+    contactName: job.contactName || "",
+    contactEmail: job.contactEmail || "",
+    contactLinkedin: job.contactLinkedin || "",
   };
 }
 
@@ -65,6 +74,9 @@ export function formToJobInput(v: JobFormValues): JobInput {
     nextActionDue: v.nextActionDue
       ? new Date(v.nextActionDue).toISOString()
       : null,
+    contactName: v.contactName.trim() || null,
+    contactEmail: v.contactEmail.trim() || null,
+    contactLinkedin: v.contactLinkedin.trim() || null,
   };
 }
 
@@ -242,6 +254,39 @@ export function JobFormDialog({
               value={values.appliedDate}
               onChange={(e) => set("appliedDate", e.target.value)}
               className="[color-scheme:light] dark:[color-scheme:dark]"
+            />
+          </Field>
+          <Field
+            label="Contact name"
+            htmlFor="jf-contact-name"
+            hint="Recruiter or hiring manager"
+          >
+            <Input
+              id="jf-contact-name"
+              value={values.contactName}
+              onChange={(e) => set("contactName", e.target.value)}
+              placeholder="Priya Shah"
+            />
+          </Field>
+          <Field label="Contact email" htmlFor="jf-contact-email">
+            <Input
+              id="jf-contact-email"
+              type="email"
+              value={values.contactEmail}
+              onChange={(e) => set("contactEmail", e.target.value)}
+              placeholder="priya@company.com"
+            />
+          </Field>
+          <Field
+            label="Contact LinkedIn"
+            htmlFor="jf-contact-linkedin"
+            className="sm:col-span-2"
+          >
+            <Input
+              id="jf-contact-linkedin"
+              value={values.contactLinkedin}
+              onChange={(e) => set("contactLinkedin", e.target.value)}
+              placeholder="linkedin.com/in/priya-shah"
             />
           </Field>
           <Field

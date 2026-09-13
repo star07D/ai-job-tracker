@@ -35,6 +35,10 @@ export interface Job {
   nextAction?: string | null;
   /** ISO date the next step is due. Drives the "Needs attention" strip. */
   nextActionDue?: string | null;
+  /** Primary contact for this role — a recruiter or hiring manager. */
+  contactName?: string | null;
+  contactEmail?: string | null;
+  contactLinkedin?: string | null;
 }
 
 /**

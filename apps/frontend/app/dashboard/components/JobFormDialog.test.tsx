@@ -39,6 +39,9 @@ const job: Job = {
   statusChangedAt: "2026-08-01T00:00:00.000Z",
   nextAction: "Send thank-you note",
   nextActionDue: "2026-09-10T00:00:00.000Z",
+  contactName: "Priya Shah",
+  contactEmail: "priya@vercel.com",
+  contactLinkedin: "linkedin.com/in/priya-shah",
 };
 
 describe("jobToForm / formToJobInput", () => {
@@ -48,6 +51,29 @@ describe("jobToForm / formToJobInput", () => {
       company: "Vercel",
       nextAction: "Send thank-you note",
       nextActionDue: "2026-09-10",
+      contactName: "Priya Shah",
+      contactEmail: "priya@vercel.com",
+      contactLinkedin: "linkedin.com/in/priya-shah",
+    });
+  });
+
+  it("uses empty strings where the job has no contact", () => {
+    const form = jobToForm({
+      ...job,
+      contactName: null,
+      contactEmail: null,
+      contactLinkedin: null,
+    });
+    expect(form.contactName).toBe("");
+    expect(form.contactEmail).toBe("");
+    expect(form.contactLinkedin).toBe("");
+  });
+
+  it("sends null for blank contact fields", () => {
+    expect(formToJobInput(EMPTY_JOB_FORM)).toMatchObject({
+      contactName: null,
+      contactEmail: null,
+      contactLinkedin: null,
     });
   });
 
@@ -83,6 +109,9 @@ describe("jobToForm / formToJobInput", () => {
       status: "Interview",
       nextAction: "Send thank-you note",
       nextActionDue: "2026-09-10T00:00:00.000Z",
+      contactName: "Priya Shah",
+      contactEmail: "priya@vercel.com",
+      contactLinkedin: "linkedin.com/in/priya-shah",
     });
   });
 });
@@ -176,6 +205,34 @@ describe("<JobFormDialog />", () => {
       title: "Frontend Dev",
       company: "Linear",
       nextAction: "Reply with availability",
+    });
+  });
+
+  it("submits the entered contact info", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <JobFormDialog open initial={null} onClose={vi.fn()} onSubmit={onSubmit} />,
+    );
+
+    await userEvent.type(screen.getByLabelText("Role"), "Frontend Dev");
+    await userEvent.type(screen.getByLabelText("Company"), "Linear");
+    await userEvent.type(screen.getByLabelText("Contact name"), "Priya Shah");
+    await userEvent.type(
+      screen.getByLabelText("Contact email"),
+      "priya@linear.app",
+    );
+    await userEvent.type(
+      screen.getByLabelText("Contact LinkedIn"),
+      "linkedin.com/in/priya-shah",
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add application" }),
+    );
+
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      contactName: "Priya Shah",
+      contactEmail: "priya@linear.app",
+      contactLinkedin: "linkedin.com/in/priya-shah",
     });
   });
 });

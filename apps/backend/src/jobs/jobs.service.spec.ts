@@ -31,6 +31,9 @@ describe('JobsService', () => {
         appliedDate: '2026-01-02T00:00:00.000Z',
         nextAction: 'Email the recruiter',
         nextActionDue: '2026-01-09T00:00:00.000Z',
+        contactName: 'Priya',
+        contactEmail: 'priya@acme.com',
+        contactLinkedin: 'linkedin.com/in/priya',
       });
 
       expect(prisma.job.create).toHaveBeenCalledWith({
@@ -41,6 +44,9 @@ describe('JobsService', () => {
           statusChangedAt: '2026-01-02T00:00:00.000Z',
           nextAction: 'Email the recruiter',
           nextActionDue: '2026-01-09T00:00:00.000Z',
+          contactName: 'Priya',
+          contactEmail: 'priya@acme.com',
+          contactLinkedin: 'linkedin.com/in/priya',
           user: { connect: { id: 'u1' } },
         }),
       });

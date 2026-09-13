@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsIn,
   IsISO8601,
   IsOptional,
@@ -45,4 +46,18 @@ export class UpdateJobDto {
   @IsOptional()
   @IsISO8601()
   nextActionDue?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  contactName?: string | null;
+
+  @IsOptional()
+  @IsEmail()
+  contactEmail?: string | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  contactLinkedin?: string | null;
 }

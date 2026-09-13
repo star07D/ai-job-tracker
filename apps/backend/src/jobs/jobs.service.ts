@@ -21,6 +21,9 @@ export class JobsService {
         statusChangedAt: data.appliedDate,
         nextAction: data.nextAction,
         nextActionDue: data.nextActionDue,
+        contactName: data.contactName,
+        contactEmail: data.contactEmail,
+        contactLinkedin: data.contactLinkedin,
 
         user: {
           connect: {

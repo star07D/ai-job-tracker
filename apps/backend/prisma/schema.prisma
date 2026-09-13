@@ -33,5 +33,8 @@ model Job {
   prepGeneratedAt  DateTime?
   nextAction       String?
   nextActionDue    DateTime?
+  contactName      String?
+  contactEmail     String?
+  contactLinkedin  String?
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
