@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  firstName String?
-  lastName  String?
-  jobs      Job[]
+  id                  String   @id @default(uuid())
+  email               String   @unique
+  password            String
+  createdAt           DateTime @default(now())
+  firstName           String?
+  lastName            String?
+  emailDigestEnabled  Boolean  @default(false)
+  jobs                Job[]
 }
 
 model Job {

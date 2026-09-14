@@ -1,0 +1,22 @@
+name: Email digest
+
+# Render's free tier has no cron support, so this workflow is the scheduler:
+# once a day it pokes the backend's POST /internal/digest endpoint, which
+# emails every opted-in user their overdue follow-ups and gone-quiet
+# applications. Needs two repo secrets — see README.md "Email digest".
+on:
+  schedule:
+    # 13:00 UTC daily. GitHub's cron can slip by a few minutes to an hour
+    # under load; fine for a once-a-day digest.
+    - cron: "0 13 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the digest endpoint
+        run: |
+          curl -sf -X POST "${{ secrets.DIGEST_URL }}" \
+            -H "X-Digest-Secret: ${{ secrets.DIGEST_SECRET }}" \
+            --max-time 60 --retry 2 --retry-delay 10

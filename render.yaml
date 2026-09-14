@@ -32,3 +32,11 @@ services:
       # optional — enables AI interview prep (free key: aistudio.google.com/apikey)
       - key: GEMINI_API_KEY
         sync: false
+      # optional — enables the daily email digest (free key: resend.com)
+      - key: RESEND_API_KEY
+        sync: false
+      # shared secret the GitHub Actions cron sends to POST /internal/digest —
+      # generate any random string and put the same value in the repo's
+      # DIGEST_SECRET GitHub Actions secret
+      - key: DIGEST_SECRET
+        sync: false

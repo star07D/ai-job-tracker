@@ -57,5 +57,8 @@ export interface AuthUser {
   email: string;
   firstName: string | null;
   lastName: string | null;
-  createdAt: string;
+  createdAt?: string;
+  /** Whether daily "needs attention" email digests are on. Absent right after
+   * login/signup — fetch GET /users/me for the authoritative value. */
+  emailDigestEnabled?: boolean;
 }

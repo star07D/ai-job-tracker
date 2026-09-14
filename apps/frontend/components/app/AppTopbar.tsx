@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, LogOut } from "lucide-react";
+import { Search, LogOut, Settings } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { Dropdown, DropdownItem, DropdownLabel } from "@/components/ui/dropdown";
+import { SettingsDialog } from "./SettingsDialog";
 import { getUser, logout } from "@/lib/auth";
 
 export function AppTopbar({
@@ -17,6 +18,7 @@ export function AppTopbar({
 }) {
   const [email, setEmail] = useState<string | null>(null);
   const [initials, setInitials] = useState("··");
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const u = getUser();
@@ -65,6 +67,14 @@ export function AppTopbar({
                 <DropdownItem
                   onClick={() => {
                     close();
+                    setSettingsOpen(true);
+                  }}
+                >
+                  <Settings size={15} /> Settings
+                </DropdownItem>
+                <DropdownItem
+                  onClick={() => {
+                    close();
                     logout();
                   }}
                 >
@@ -75,6 +85,11 @@ export function AppTopbar({
           </Dropdown>
         </div>
       </div>
+
+      <SettingsDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </header>
   );
 }

@@ -7,6 +7,7 @@ const PUBLIC_USER_FIELDS = {
   firstName: true,
   lastName: true,
   createdAt: true,
+  emailDigestEnabled: true,
 } as const;
 
 @Injectable()
@@ -28,5 +29,13 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async updatePreferences(id: string, emailDigestEnabled: boolean) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { emailDigestEnabled },
+      select: PUBLIC_USER_FIELDS,
+    });
   }
 }

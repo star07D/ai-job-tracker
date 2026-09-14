@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { JobsModule } from './jobs/jobs.module';
 import { PrepModule } from './prep/prep.module';
+import { DigestModule } from './digest/digest.module';
 import { validateEnv } from './config/env.validation';
 
 @Module({
@@ -29,6 +30,7 @@ import { validateEnv } from './config/env.validation';
     PrismaModule,
     JobsModule,
     PrepModule,
+    DigestModule,
   ],
   controllers: [AppController],
   providers: [

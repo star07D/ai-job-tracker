@@ -35,7 +35,14 @@ describe('UsersService', () => {
       const selectArg = prisma.user.findUnique.mock.calls[0][0].select;
       expect(selectArg).not.toHaveProperty('password');
       expect(Object.keys(selectArg).sort()).toEqual(
-        ['createdAt', 'email', 'firstName', 'id', 'lastName'].sort(),
+        [
+          'createdAt',
+          'email',
+          'emailDigestEnabled',
+          'firstName',
+          'id',
+          'lastName',
+        ].sort(),
       );
       expect(user).not.toHaveProperty('password');
     });
@@ -45,6 +52,25 @@ describe('UsersService', () => {
       await expect(service.findById('missing')).rejects.toBeInstanceOf(
         NotFoundException,
       );
+    });
+  });
+
+  describe('updatePreferences', () => {
+    it('updates the email digest flag and returns only public fields', async () => {
+      prisma.user.update.mockResolvedValue({
+        id: 'u1',
+        email: 'a@example.com',
+        emailDigestEnabled: true,
+      });
+
+      const user = await service.updatePreferences('u1', true);
+
+      const call = prisma.user.update.mock.calls[0][0];
+      expect(call.where).toEqual({ id: 'u1' });
+      expect(call.data).toEqual({ emailDigestEnabled: true });
+      expect(call.select).not.toHaveProperty('password');
+      expect(call.select).toHaveProperty('emailDigestEnabled', true);
+      expect(user).not.toHaveProperty('password');
     });
   });
 });

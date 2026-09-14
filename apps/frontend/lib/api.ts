@@ -109,6 +109,14 @@ export function getMe() {
   return apiFetch<AuthUser>("/users/me");
 }
 
+/** Turn the daily "needs attention" email digest on or off. */
+export function updateEmailDigest(enabled: boolean) {
+  return apiFetch<AuthUser>("/users/me", {
+    method: "PATCH",
+    body: JSON.stringify({ emailDigestEnabled: enabled }),
+  });
+}
+
 export function getJobs() {
   return apiFetch<Job[]>("/jobs");
 }

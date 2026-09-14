@@ -7,7 +7,9 @@ import { PrismaService } from '../prisma/prisma.service';
 export type PrismaMock = {
   user: {
     findUnique: jest.Mock;
+    findMany: jest.Mock;
     create: jest.Mock;
+    update: jest.Mock;
   };
   job: {
     create: jest.Mock;
@@ -22,7 +24,9 @@ export function createPrismaMock(): PrismaMock {
   return {
     user: {
       findUnique: jest.fn(),
+      findMany: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
     job: {
       create: jest.fn(),

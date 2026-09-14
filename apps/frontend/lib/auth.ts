@@ -30,6 +30,13 @@ export function setSession(token: string, user: unknown) {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+/** Merge a partial update (e.g. a preference change) into the stored user. */
+export function updateStoredUser(patch: Partial<AuthUser>) {
+  const current = getUser();
+  if (!current) return;
+  localStorage.setItem(USER_KEY, JSON.stringify({ ...current, ...patch }));
+}
+
 export function clearSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

@@ -35,6 +35,20 @@ class EnvVars {
   @IsOptional()
   @IsString()
   GEMINI_MODEL?: string;
+
+  // Optional — email digests are disabled until both of these are set.
+  @IsOptional()
+  @IsString()
+  RESEND_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  DIGEST_FROM_EMAIL?: string;
+
+  // Shared secret the digest cron sends as the X-Digest-Secret header.
+  @IsOptional()
+  @IsString()
+  DIGEST_SECRET?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvVars {

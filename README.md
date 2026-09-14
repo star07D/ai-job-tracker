@@ -6,9 +6,10 @@
 A job-application tracker: register/login, per-user job CRUD with a list **and** kanban
 board, a pipeline overview with per-stage stats and a chart, a per-job detail page with a
 recruiter/hiring-manager contact card, follow-up reminders (a "next step" + due date per
-role, surfaced in a dashboard "Needs attention" strip), staleness flags on applications
-that have gone quiet in a stage, and two AI touches — interview prep per role, and
-autofilling a new application from a pasted job description. Light and dark themes.
+role, surfaced in a dashboard "Needs attention" strip) with an optional daily email
+digest, staleness flags on applications that have gone quiet in a stage, and two AI
+touches — interview prep per role, and autofilling a new application from a pasted job
+description. Light and dark themes.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
@@ -82,6 +83,28 @@ It runs on **Google Gemini's free tier** (Flash models — no credit card). Set 
 The provider is behind an interface (`apps/backend/src/prep/prep.types.ts`) — swapping in
 Claude/OpenAI is one line in `prep.module.ts`. Note: Google may use free-tier prompts to
 improve its products.
+
+## Email digest
+
+Opt in from the account menu (top right → **Settings**) and once a day you'll get an
+email with any follow-ups that are due or overdue and any applications that have gone
+quiet — each linking straight to the job. Off by default.
+
+It runs on **Resend's free tier**, sending to your own account email (no domain
+verification needed for that). Render's free plan has no cron, so the schedule lives in
+GitHub Actions (`.github/workflows/email-digest.yml`), which calls a secret-protected
+`POST /internal/digest` once a day. Set it up:
+
+1. Get a free key at <https://resend.com/api-keys>
+2. Add `RESEND_API_KEY` to the Render service's env vars
+3. Generate any random string, add it as `DIGEST_SECRET` on Render **and** as a GitHub
+   Actions repo secret (Settings → Secrets and variables → Actions)
+4. Add a `DIGEST_URL` repo secret: `https://<your-render-service>.onrender.com/internal/digest`
+5. Turn the toggle on in Settings. Test the schedule anytime from the Actions tab
+   ("Email digest" → Run workflow) instead of waiting for the next scheduled run.
+
+Without `RESEND_API_KEY`/`DIGEST_SECRET` set, the endpoint is disabled — nothing else is
+affected, and the in-app "Needs attention" strip still works as before.
 
 ## Layout
 

@@ -5,7 +5,7 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
 
 describe('UsersController', () => {
   let controller: UsersController;
-  const usersService = { findById: jest.fn() };
+  const usersService = { findById: jest.fn(), updatePreferences: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -30,5 +30,22 @@ describe('UsersController', () => {
 
     expect(usersService.findById).toHaveBeenCalledWith('u1');
     expect(result).toEqual({ id: 'u1', email: 'a@example.com' });
+  });
+
+  it('PATCH /users/me forwards the flag to the service', async () => {
+    usersService.updatePreferences.mockResolvedValue({
+      id: 'u1',
+      emailDigestEnabled: true,
+    });
+
+    const req = {
+      user: { userId: 'u1', email: 'a@example.com' },
+    } as AuthenticatedRequest;
+    const result = await controller.updateMe(req, {
+      emailDigestEnabled: true,
+    });
+
+    expect(usersService.updatePreferences).toHaveBeenCalledWith('u1', true);
+    expect(result).toEqual({ id: 'u1', emailDigestEnabled: true });
   });
 });
