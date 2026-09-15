@@ -27,6 +27,12 @@ class EnvVars {
   @IsInt()
   PORT?: number;
 
+  // Governs the refresh-token cookie's Secure/SameSite flags — see
+  // AuthController.setRefreshCookie. Render/Vercel set this in production.
+  @IsOptional()
+  @IsString()
+  NODE_ENV?: string;
+
   // Optional — the AI interview-prep feature is disabled until this is set.
   @IsOptional()
   @IsString()

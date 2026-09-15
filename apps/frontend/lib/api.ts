@@ -1,4 +1,5 @@
 import { AuthUser, Job, JobInput, ParsedJob } from "./types";
+import { getAccessToken, setAccessToken, clearSession } from "./auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -17,8 +18,7 @@ function isAuthPath(path: string) {
 
 function handleUnauthorized() {
   if (typeof window === "undefined") return;
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+  clearSession();
   if (window.location.pathname !== "/login") {
     window.location.href = "/login";
   }
@@ -27,10 +27,10 @@ function handleUnauthorized() {
 async function apiFetch<T>(
   path: string,
   options: RequestInit & { timeoutMs?: number } = {},
+  isRetry = false,
 ): Promise<T> {
   const { timeoutMs, ...init } = options;
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token = getAccessToken();
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -51,6 +51,9 @@ async function apiFetch<T>(
     res = await fetch(`${API_URL}${path}`, {
       ...init,
       headers,
+      // sends the httpOnly refresh cookie on the (few) requests that need it —
+      // its Path scoping keeps it off every other call regardless
+      credentials: "include",
       signal: controller?.signal,
     });
   } catch (err) {
@@ -62,16 +65,20 @@ async function apiFetch<T>(
     if (timer) clearTimeout(timer);
   }
 
+  // The access token expired mid-session: try one silent refresh and replay
+  // the request before giving up. Never for the auth endpoints themselves —
+  // a 401 there means "bad credentials" or "no valid session", not "retry".
+  if (res.status === 401 && !isAuthPath(path) && !isRetry) {
+    const session = await refreshAccessToken();
+    if (session) {
+      return apiFetch<T>(path, options, true);
+    }
+    handleUnauthorized();
+  }
+
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
-    // An expired/invalid token on a protected call: drop the session and bounce
-    // to login instead of surfacing a raw error. Auth calls keep their message
-    // so the login/signup forms can show it.
-    if (res.status === 401 && !isAuthPath(path)) {
-      handleUnauthorized();
-    }
-
     const message = Array.isArray(data?.message)
       ? data.message.join(", ")
       : data?.message || "Request failed";
@@ -82,7 +89,7 @@ async function apiFetch<T>(
 }
 
 interface AuthResponse {
-  token: string;
+  accessToken: string;
   user: AuthUser;
 }
 
@@ -103,6 +110,54 @@ export function login(email: string, password: string) {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+}
+
+let refreshInFlight: Promise<AuthResponse | null> | null = null;
+
+/**
+ * Renews the access token from the httpOnly refresh cookie. Concurrent
+ * callers (e.g. several requests 401-ing at once) share one in-flight call.
+ * Never throws — returns null when there's no valid session.
+ */
+export function refreshAccessToken(): Promise<AuthResponse | null> {
+  if (!refreshInFlight) {
+    refreshInFlight = doRefresh().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
+async function doRefresh(): Promise<AuthResponse | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) {
+      setAccessToken(null);
+      return null;
+    }
+    const data = (await res.json()) as AuthResponse;
+    setAccessToken(data.accessToken);
+    return data;
+  } catch {
+    setAccessToken(null);
+    return null;
+  }
+}
+
+/** Best-effort revocation of the refresh cookie server-side. Never throws —
+ * callers should clear local state regardless of whether this succeeds. */
+export async function logoutUser(): Promise<void> {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // logging out locally either way
+  }
 }
 
 export function getMe() {

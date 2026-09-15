@@ -2,12 +2,20 @@
 
 import { AuthUser } from "./types";
 
-const TOKEN_KEY = "token";
 const USER_KEY = "user";
 
-export function getToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+// The access token lives in memory only — never localStorage — so it isn't
+// readable by an injected script. That means it's lost on a full page
+// reload by design; lib/api.ts's refreshAccessToken() recovers it via the
+// refresh token, which lives in an httpOnly cookie this code never touches.
+let accessToken: string | null = null;
+
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
+export function setAccessToken(token: string | null) {
+  accessToken = token;
 }
 
 export function getUser(): AuthUser | null {
@@ -21,12 +29,7 @@ export function getUser(): AuthUser | null {
   }
 }
 
-export function isAuthenticated() {
-  return !!getToken();
-}
-
-export function setSession(token: string, user: unknown) {
-  localStorage.setItem(TOKEN_KEY, token);
+export function setUser(user: AuthUser) {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
@@ -34,15 +37,12 @@ export function setSession(token: string, user: unknown) {
 export function updateStoredUser(patch: Partial<AuthUser>) {
   const current = getUser();
   if (!current) return;
-  localStorage.setItem(USER_KEY, JSON.stringify({ ...current, ...patch }));
+  setUser({ ...current, ...patch });
 }
 
+/** Drops the in-memory access token and the cached user. Local-only — doesn't
+ * revoke the refresh cookie server-side; see logoutUser() in lib/api.ts. */
 export function clearSession() {
-  localStorage.removeItem(TOKEN_KEY);
+  accessToken = null;
   localStorage.removeItem(USER_KEY);
-}
-
-export function logout() {
-  clearSession();
-  window.location.href = "/login";
 }

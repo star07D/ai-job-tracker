@@ -18,6 +18,12 @@ export type PrismaMock = {
     update: jest.Mock;
     delete: jest.Mock;
   };
+  refreshToken: {
+    create: jest.Mock;
+    findUnique: jest.Mock;
+    update: jest.Mock;
+    updateMany: jest.Mock;
+  };
 };
 
 export function createPrismaMock(): PrismaMock {
@@ -34,6 +40,12 @@ export function createPrismaMock(): PrismaMock {
       findFirst: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+    },
+    refreshToken: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      updateMany: jest.fn(),
     },
   };
 }

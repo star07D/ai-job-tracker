@@ -7,7 +7,8 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { Dropdown, DropdownItem, DropdownLabel } from "@/components/ui/dropdown";
 import { SettingsDialog } from "./SettingsDialog";
-import { getUser, logout } from "@/lib/auth";
+import { getUser, clearSession } from "@/lib/auth";
+import { logoutUser } from "@/lib/api";
 
 export function AppTopbar({
   search,
@@ -19,6 +20,12 @@ export function AppTopbar({
   const [email, setEmail] = useState<string | null>(null);
   const [initials, setInitials] = useState("··");
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  async function handleLogout() {
+    await logoutUser();
+    clearSession();
+    window.location.href = "/login";
+  }
 
   useEffect(() => {
     const u = getUser();
@@ -75,7 +82,7 @@ export function AppTopbar({
                 <DropdownItem
                   onClick={() => {
                     close();
-                    logout();
+                    handleLogout();
                   }}
                 >
                   <LogOut size={15} /> Log out

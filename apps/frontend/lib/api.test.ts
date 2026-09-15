@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { ApiError, createJob, generatePrep, getJobs } from "./api";
+import { getAccessToken, getUser, setAccessToken, setUser } from "./auth";
 
 function jsonResponse(body: unknown, init: { ok?: boolean; status?: number } = {}) {
   return {
@@ -30,6 +31,7 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   vi.stubGlobal("localStorage", memStorage());
   fetchMock.mockReset();
+  setAccessToken(null);
   // Keep the 401 handler off the navigation path (it early-returns on /login).
   window.history.pushState({}, "", "/login");
 });
@@ -40,8 +42,8 @@ afterEach(() => {
 });
 
 describe("apiFetch (via the exported wrappers)", () => {
-  it("attaches the bearer token from localStorage", async () => {
-    localStorage.setItem("token", "tok-123");
+  it("attaches the bearer token from memory", async () => {
+    setAccessToken("tok-123");
     fetchMock.mockResolvedValue(jsonResponse([]));
 
     await getJobs();
@@ -93,16 +95,44 @@ describe("apiFetch (via the exported wrappers)", () => {
     await expect(getJobs()).rejects.toBeInstanceOf(ApiError);
   });
 
-  it("clears the stored session on a 401", async () => {
-    localStorage.setItem("token", "tok-123");
-    localStorage.setItem("user", '{"id":"u1"}');
-    fetchMock.mockResolvedValue(
-      jsonResponse({ message: "Unauthorized" }, { ok: false, status: 401 }),
+  it("silently refreshes and retries once on a 401", async () => {
+    setAccessToken("expired-token");
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({ message: "Unauthorized" }, { ok: false, status: 401 }),
+      ) // the original /jobs call
+      .mockResolvedValueOnce(
+        jsonResponse({ accessToken: "fresh-token", user: { id: "u1" } }),
+      ) // POST /auth/refresh
+      .mockResolvedValueOnce(jsonResponse([{ id: "j1" }])); // the retried /jobs call
+
+    const jobs = await getJobs();
+
+    expect(jobs).toEqual([{ id: "j1" }]);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock.mock.calls[1][0]).toMatch(/\/auth\/refresh$/);
+    const retryInit = fetchMock.mock.calls[2][1];
+    expect((retryInit.headers as Record<string, string>).Authorization).toBe(
+      "Bearer fresh-token",
     );
+    expect(getAccessToken()).toBe("fresh-token");
+  });
+
+  it("clears the session when the silent refresh also fails", async () => {
+    setAccessToken("expired-token");
+    setUser({ id: "u1", email: "a@example.com", firstName: null, lastName: null });
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse({ message: "Unauthorized" }, { ok: false, status: 401 }),
+      ) // the original /jobs call
+      .mockResolvedValueOnce(
+        jsonResponse({ message: "Unauthorized" }, { ok: false, status: 401 }),
+      ); // POST /auth/refresh — no valid session either
 
     await expect(getJobs()).rejects.toBeInstanceOf(ApiError);
-    expect(localStorage.getItem("token")).toBeNull();
-    expect(localStorage.getItem("user")).toBeNull();
+
+    expect(getAccessToken()).toBeNull();
+    expect(getUser()).toBeNull();
   });
 
   it("turns a timeout abort into a 408 ApiError", async () => {

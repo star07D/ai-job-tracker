@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { PrismaModule } from '../prisma/prisma.module';
+import { ACCESS_TOKEN_TTL } from './auth.constants';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import { PrismaModule } from '../prisma/prisma.module';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         secret: config.getOrThrow<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '7d' },
+        signOptions: { expiresIn: ACCESS_TOKEN_TTL },
       }),
     }),
   ],

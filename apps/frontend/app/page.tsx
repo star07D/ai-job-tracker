@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/auth";
+import { refreshAccessToken } from "@/lib/api";
+import { setUser } from "@/lib/auth";
 import { Landing } from "@/components/marketing/Landing";
 
 export default function Home() {
@@ -10,11 +11,19 @@ export default function Home() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    if (getToken()) {
-      router.replace("/dashboard");
-    } else {
-      setReady(true);
-    }
+    let active = true;
+    refreshAccessToken().then((session) => {
+      if (!active) return;
+      if (session) {
+        setUser(session.user);
+        router.replace("/dashboard");
+      } else {
+        setReady(true);
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [router]);
 
   if (!ready) return <div className="min-h-screen bg-bg" />;

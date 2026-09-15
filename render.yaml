@@ -23,6 +23,10 @@ services:
     envVars:
       - key: NODE_VERSION
         value: "20"
+      # governs the refresh-token cookie's Secure/SameSite flags (frontend and
+      # API are cross-site in production, so the cookie needs SameSite=None)
+      - key: NODE_ENV
+        value: "production"
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET

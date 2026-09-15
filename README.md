@@ -106,6 +106,22 @@ GitHub Actions (`.github/workflows/email-digest.yml`), which calls a secret-prot
 Without `RESEND_API_KEY`/`DIGEST_SECRET` set, the endpoint is disabled — nothing else is
 affected, and the in-app "Needs attention" strip still works as before.
 
+## Auth
+
+Short-lived access tokens + refresh-token rotation, not a long-lived JWT in `localStorage`:
+
+- The **access token** (15 min) comes back from login/signup in the response body and is
+  kept in memory only — never `localStorage` — so it isn't readable by an injected script.
+  It's gone on a full page reload by design.
+- The **refresh token** lives in an **httpOnly, `SameSite` cookie** scoped to `/auth`
+  (`Secure` + `SameSite=None` in production; plain `SameSite=Lax` on localhost), so
+  frontend JS never touches it either. Each use **rotates** it — the old one is revoked in
+  the database the moment a new one is issued, so a replayed/stolen token is rejected.
+- A silent `POST /auth/refresh` on page load (and once, automatically, after any 401)
+  recovers the session from that cookie — that's what makes losing the in-memory token on
+  reload invisible to you as a user.
+- **Logout** revokes that session's refresh token server-side, not just the cookie.
+
 ## Layout
 
 ```
@@ -117,8 +133,8 @@ apps/frontend   Next.js app — see apps/frontend/AGENTS.md for Next 16 rules
 ## Known gaps / deferred work
 
 - `GET /jobs` filtering, sorting and pagination are done client-side.
-- The JWT lives in `localStorage`; moving it to an httpOnly cookie is deferred.
-- No refresh tokens; access token lifetime is 7 days.
+- Refresh tokens aren't pruned once expired/revoked — the rows just linger (harmless,
+  since expiry/revocation is checked on every use, just not swept up).
 
 ## Deploying
 

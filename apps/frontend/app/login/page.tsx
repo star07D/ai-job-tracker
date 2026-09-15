@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { login } from "@/lib/api";
-import { setSession } from "@/lib/auth";
+import { setAccessToken, setUser } from "@/lib/auth";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,8 @@ export default function LoginPage() {
     setError("");
     try {
       const data = await login(email, password);
-      setSession(data.token, data.user);
+      setAccessToken(data.accessToken);
+      setUser(data.user);
       toast.success("Welcome back");
       router.push("/dashboard");
     } catch (err) {

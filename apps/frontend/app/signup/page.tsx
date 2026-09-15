@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { registerUser } from "@/lib/api";
-import { setSession } from "@/lib/auth";
+import { setAccessToken, setUser } from "@/lib/auth";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,8 @@ export default function SignupPage() {
     setLoading(true);
     try {
       const data = await registerUser({ firstName, lastName, email, password });
-      setSession(data.token, data.user);
+      setAccessToken(data.accessToken);
+      setUser(data.user);
       toast.success("Account created");
       router.push("/dashboard");
     } catch (err) {

@@ -2,8 +2,8 @@
 
 import { useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { getToken, clearSession } from "@/lib/auth";
-import { getMe } from "@/lib/api";
+import { getAccessToken, setUser, clearSession } from "@/lib/auth";
+import { getMe, refreshAccessToken } from "@/lib/api";
 import { LogoMark } from "@/components/brand/Logo";
 
 interface Props {
@@ -19,20 +19,36 @@ export default function ProtectedRoute({ children }: Props) {
   useEffect(() => {
     let active = true;
 
-    if (!getToken()) {
-      router.replace("/login");
-      return;
+    async function check() {
+      // Already have an access token in memory (e.g. we just logged in this
+      // session) — no need to spend a refresh round trip confirming that.
+      if (getAccessToken()) {
+        try {
+          const user = await getMe();
+          if (active) {
+            setUser(user);
+            setStatus("authed");
+          }
+        } catch {
+          clearSession();
+          if (active) router.replace("/login");
+        }
+        return;
+      }
+
+      // A fresh page load: the access token lives only in memory, so it's
+      // gone. Recover it from the httpOnly refresh cookie instead.
+      const session = await refreshAccessToken();
+      if (!active) return;
+      if (!session) {
+        router.replace("/login");
+        return;
+      }
+      setUser(session.user);
+      setStatus("authed");
     }
 
-    getMe()
-      .then(() => {
-        if (active) setStatus("authed");
-      })
-      .catch(() => {
-        clearSession();
-        router.replace("/login");
-      });
-
+    check();
     return () => {
       active = false;
     };
