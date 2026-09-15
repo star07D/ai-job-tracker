@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsEmail,
   IsIn,
   IsISO8601,
@@ -57,4 +58,10 @@ export class CreateJobDto {
   @IsString()
   @MaxLength(300)
   contactLinkedin?: string | null;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(30, { each: true })
+  tags?: string[];
 }

@@ -200,6 +200,14 @@ export function deleteJob(id: string) {
   });
 }
 
+/** Archive/unarchive a job — hides or restores it in the active pipeline. */
+export function setJobArchived(id: string, archived: boolean) {
+  return apiFetch<Job>(`/jobs/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({ archived }),
+  });
+}
+
 /** Generate (or regenerate) AI interview prep for a job. Returns the updated job. */
 export function generatePrep(id: string) {
   return apiFetch<Job>(`/jobs/${id}/prep`, { method: "POST", timeoutMs: 60_000 });

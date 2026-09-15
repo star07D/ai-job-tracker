@@ -39,15 +39,20 @@ export interface Job {
   contactName?: string | null;
   contactEmail?: string | null;
   contactLinkedin?: string | null;
+  tags: string[];
+  /** Soft-hidden from the active pipeline — set/cleared via `setJobArchived`. */
+  archived: boolean;
+  archivedAt?: string | null;
 }
 
 /**
  * Fields the client sends when creating/updating a job. `appliedDate` is
- * optional — the backend defaults it to "now" when omitted.
+ * optional — the backend defaults it to "now" when omitted. `archived` isn't
+ * part of the form — it's toggled separately via `setJobArchived`.
  */
 export type JobInput = Omit<
   Job,
-  "id" | "createdAt" | "statusChangedAt" | "appliedDate"
+  "id" | "createdAt" | "statusChangedAt" | "appliedDate" | "archived" | "archivedAt"
 > & {
   appliedDate?: string;
 };

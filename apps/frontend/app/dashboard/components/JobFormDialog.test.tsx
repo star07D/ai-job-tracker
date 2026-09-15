@@ -42,6 +42,8 @@ const job: Job = {
   contactName: "Priya Shah",
   contactEmail: "priya@vercel.com",
   contactLinkedin: "linkedin.com/in/priya-shah",
+  tags: ["remote"],
+  archived: false,
 };
 
 describe("jobToForm / formToJobInput", () => {
@@ -112,7 +114,12 @@ describe("jobToForm / formToJobInput", () => {
       contactName: "Priya Shah",
       contactEmail: "priya@vercel.com",
       contactLinkedin: "linkedin.com/in/priya-shah",
+      tags: ["remote"],
     });
+  });
+
+  it("defaults tags to an empty array when the job has none", () => {
+    expect(jobToForm({ ...job, tags: [] }).tags).toEqual([]);
   });
 });
 
@@ -234,5 +241,28 @@ describe("<JobFormDialog />", () => {
       contactEmail: "priya@linear.app",
       contactLinkedin: "linkedin.com/in/priya-shah",
     });
+  });
+
+  it("adds tags on Enter and lets them be removed", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <JobFormDialog open initial={null} onClose={vi.fn()} onSubmit={onSubmit} />,
+    );
+
+    await userEvent.type(screen.getByLabelText("Role"), "Frontend Dev");
+    await userEvent.type(screen.getByLabelText("Company"), "Linear");
+    const tagField = screen.getByLabelText("Tags");
+    await userEvent.type(tagField, "remote{Enter}dream-job{Enter}");
+
+    expect(screen.getByText("remote")).toBeInTheDocument();
+    expect(screen.getByText("dream-job")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByLabelText("Remove tag dream-job"));
+    expect(screen.queryByText("dream-job")).not.toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add application" }),
+    );
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ tags: ["remote"] });
   });
 });

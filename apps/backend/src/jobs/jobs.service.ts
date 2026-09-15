@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
+import { normalizeTags } from './tags';
 
 @Injectable()
 export class JobsService {
@@ -24,6 +25,7 @@ export class JobsService {
         contactName: data.contactName,
         contactEmail: data.contactEmail,
         contactLinkedin: data.contactLinkedin,
+        tags: normalizeTags(data.tags),
 
         user: {
           connect: {
@@ -65,12 +67,18 @@ export class JobsService {
 
     const statusChanged =
       data.status !== undefined && data.status !== existing.status;
+    const archivedChanged =
+      data.archived !== undefined && data.archived !== existing.archived;
 
     return this.prisma.job.update({
       where: { id },
       data: {
         ...data,
+        ...(data.tags !== undefined ? { tags: normalizeTags(data.tags) } : {}),
         ...(statusChanged ? { statusChangedAt: new Date() } : {}),
+        ...(archivedChanged
+          ? { archivedAt: data.archived ? new Date() : null }
+          : {}),
       },
     });
   }

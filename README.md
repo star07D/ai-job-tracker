@@ -4,12 +4,13 @@
 *(the API is on a free tier that sleeps when idle — the first request after a quiet spell takes ~30s)*
 
 A job-application tracker: register/login, per-user job CRUD with a list **and** kanban
-board, a pipeline overview with per-stage stats and a chart, a per-job detail page with a
-recruiter/hiring-manager contact card, follow-up reminders (a "next step" + due date per
-role, surfaced in a dashboard "Needs attention" strip) with an optional daily email
-digest, staleness flags on applications that have gone quiet in a stage, and two AI
-touches — interview prep per role, and autofilling a new application from a pasted job
-description. Light and dark themes.
+board, freeform tags plus an archive for roles you're done tracking, a pipeline overview
+with per-stage stats and a chart, a per-job detail page with a recruiter/hiring-manager
+contact card, follow-up reminders (a "next step" + due date per role, surfaced in a
+dashboard "Needs attention" strip) with an optional daily email digest, staleness flags
+on applications that have gone quiet in a stage, and two AI touches — interview prep per
+role, and autofilling a new application from a pasted job description. Light and dark
+themes.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">

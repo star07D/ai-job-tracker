@@ -14,6 +14,8 @@ import {
   User,
   Mail,
   ExternalLink,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -36,7 +38,7 @@ import {
 import { PrepCard } from "./components/PrepCard";
 import { NextStep } from "./components/NextStep";
 
-import { deleteJob, getSingleJob, updateJob } from "@/lib/api";
+import { deleteJob, getSingleJob, setJobArchived, updateJob } from "@/lib/api";
 import { Job } from "@/lib/types";
 import { isStale, stageInfo } from "@/lib/stale";
 import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
@@ -98,6 +100,18 @@ function JobDetailContent() {
     router.push("/dashboard");
   }
 
+  async function toggleArchive() {
+    if (!job) return;
+    const archived = !job.archived;
+    try {
+      const updated = await setJobArchived(id, archived);
+      setJob(updated);
+      toast.success(archived ? "Application archived" : "Application restored");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update");
+    }
+  }
+
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10 md:px-8">
@@ -136,6 +150,13 @@ function JobDetailContent() {
         <ArrowLeft size={13} /> Dashboard
       </Link>
 
+      {job.archived && (
+        <div className="label-mono mt-5 flex items-center gap-2 rounded-lg border border-border-strong bg-surface-2 px-3.5 py-2.5 !text-[11px] !normal-case !tracking-normal text-fg-muted">
+          <Archive size={13} /> This application is archived — it&apos;s
+          excluded from your active pipeline and reminders.
+        </div>
+      )}
+
       <Reveal as={Card} className="mt-5 block">
         <CardBody className="flex flex-col justify-between gap-5 sm:flex-row">
           <div>
@@ -166,6 +187,18 @@ function JobDetailContent() {
                 <Clock size={12} /> {stageInfo(job).label} in {job.status}
               </span>
             </div>
+            {job.tags.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {job.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-md bg-surface-2 px-2 py-0.5 text-[11px] font-medium text-fg-muted"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-start gap-2 sm:items-end">
@@ -225,6 +258,17 @@ function JobDetailContent() {
                 }}
               >
                 <Pencil size={15} /> Edit application
+              </Button>
+              <Button variant="outline" className="w-full" onClick={toggleArchive}>
+                {job.archived ? (
+                  <>
+                    <ArchiveRestore size={15} /> Unarchive
+                  </>
+                ) : (
+                  <>
+                    <Archive size={15} /> Archive
+                  </>
+                )}
               </Button>
               <Button
                 variant="ghost"

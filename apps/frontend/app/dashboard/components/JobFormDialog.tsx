@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Field } from "@/components/ui/field";
+import { TagInput } from "@/components/ui/tag-input";
 import { JOB_STATUSES, JobStatus } from "@/lib/job-status";
 import { ApiError, parseJobDescription } from "@/lib/api";
 import { Job, JobInput } from "@/lib/types";
@@ -25,6 +26,7 @@ export interface JobFormValues {
   contactName: string;
   contactEmail: string;
   contactLinkedin: string;
+  tags: string[];
 }
 
 export const EMPTY_JOB_FORM: JobFormValues = {
@@ -40,6 +42,7 @@ export const EMPTY_JOB_FORM: JobFormValues = {
   contactName: "",
   contactEmail: "",
   contactLinkedin: "",
+  tags: [],
 };
 
 export function jobToForm(job: Job): JobFormValues {
@@ -56,6 +59,7 @@ export function jobToForm(job: Job): JobFormValues {
     contactName: job.contactName || "",
     contactEmail: job.contactEmail || "",
     contactLinkedin: job.contactLinkedin || "",
+    tags: job.tags ?? [],
   };
 }
 
@@ -77,6 +81,7 @@ export function formToJobInput(v: JobFormValues): JobInput {
     contactName: v.contactName.trim() || null,
     contactEmail: v.contactEmail.trim() || null,
     contactLinkedin: v.contactLinkedin.trim() || null,
+    tags: v.tags,
   };
 }
 
@@ -240,6 +245,19 @@ export function JobFormDialog({
                 <option key={s}>{s}</option>
               ))}
             </Select>
+          </Field>
+          <Field
+            label="Tags"
+            htmlFor="jf-tags"
+            hint="Press Enter or comma to add"
+            className="sm:col-span-2"
+          >
+            <TagInput
+              id="jf-tags"
+              value={values.tags}
+              onChange={(tags) => set("tags", tags)}
+              placeholder="e.g. remote, dream-job"
+            />
           </Field>
           <Field
             label="Applied date"

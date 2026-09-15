@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Pencil, Trash2, ArrowUpRight } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  ArrowUpRight,
+  Archive,
+  ArchiveRestore,
+} from "lucide-react";
 import { Job } from "@/lib/types";
 import { StatusBadge } from "@/components/ui/badge";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
@@ -20,10 +27,12 @@ export function JobRow({
   job,
   onEdit,
   onDelete,
+  onToggleArchive,
 }: {
   job: Job;
   onEdit: (job: Job) => void;
   onDelete: (job: Job) => void;
+  onToggleArchive: (job: Job) => void;
 }) {
   const router = useRouter();
   const due =
@@ -34,12 +43,20 @@ export function JobRow({
   const showStale = isStale(job);
 
   return (
-    <div className="group relative flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2">
+    <div
+      className={cn(
+        "group relative flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2",
+        job.archived && "opacity-60",
+      )}
+    >
       <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-transparent transition-colors group-hover:bg-accent" />
 
       <Link href={`/dashboard/job/${job.id}`} className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 text-[14.5px] font-semibold">
           <span className="truncate">{job.title}</span>
+          {job.archived && (
+            <Archive size={12} className="shrink-0 text-fg-subtle" />
+          )}
           <ArrowUpRight
             size={14}
             className="shrink-0 text-fg-subtle opacity-0 transition-opacity group-hover:opacity-100"
@@ -65,6 +82,18 @@ export function JobRow({
             </span>
           )}
         </div>
+        {job.tags.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {job.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10.5px] font-medium text-fg-subtle"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
       </Link>
 
       <StatusBadge status={job.status} />
@@ -96,6 +125,22 @@ export function JobRow({
               }}
             >
               <Pencil size={15} /> Edit
+            </DropdownItem>
+            <DropdownItem
+              onClick={() => {
+                close();
+                onToggleArchive(job);
+              }}
+            >
+              {job.archived ? (
+                <>
+                  <ArchiveRestore size={15} /> Unarchive
+                </>
+              ) : (
+                <>
+                  <Archive size={15} /> Archive
+                </>
+              )}
             </DropdownItem>
             <DropdownItem
               destructive

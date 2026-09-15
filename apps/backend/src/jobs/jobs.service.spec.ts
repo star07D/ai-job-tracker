@@ -51,6 +51,35 @@ describe('JobsService', () => {
         }),
       });
     });
+
+    it('normalizes tags: trims, drops blanks, dedupes case-insensitively', async () => {
+      prisma.job.create.mockResolvedValue({ id: 'j1' });
+
+      await service.create('u1', {
+        title: 'Dev',
+        company: 'Acme',
+        status: 'Applied',
+        tags: [' Remote ', 'remote', 'Backend', '', '  '],
+      });
+
+      expect(prisma.job.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ tags: ['Remote', 'Backend'] }),
+      });
+    });
+
+    it('defaults tags to an empty array when omitted', async () => {
+      prisma.job.create.mockResolvedValue({ id: 'j1' });
+
+      await service.create('u1', {
+        title: 'Dev',
+        company: 'Acme',
+        status: 'Applied',
+      });
+
+      expect(prisma.job.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ tags: [] }),
+      });
+    });
   });
 
   describe('findAll', () => {
@@ -120,6 +149,66 @@ describe('JobsService', () => {
       expect(prisma.job.update).toHaveBeenCalledWith({
         where: { id: 'j1' },
         data: { status: 'Applied', notes: 'hi' },
+      });
+    });
+
+    it('normalizes tags when tags are part of the update', async () => {
+      prisma.job.findFirst.mockResolvedValue({
+        id: 'j1',
+        userId: 'u1',
+        status: 'Applied',
+        archived: false,
+      });
+      prisma.job.update.mockResolvedValue({ id: 'j1' });
+      await service.update('j1', 'u1', { tags: [' Remote ', 'remote', ''] });
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'j1' },
+        data: { tags: ['Remote'] },
+      });
+    });
+
+    it('stamps archivedAt when archiving', async () => {
+      prisma.job.findFirst.mockResolvedValue({
+        id: 'j1',
+        userId: 'u1',
+        status: 'Applied',
+        archived: false,
+      });
+      prisma.job.update.mockResolvedValue({ id: 'j1' });
+      await service.update('j1', 'u1', { archived: true });
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'j1' },
+        data: { archived: true, archivedAt: expect.any(Date) },
+      });
+    });
+
+    it('clears archivedAt when unarchiving', async () => {
+      prisma.job.findFirst.mockResolvedValue({
+        id: 'j1',
+        userId: 'u1',
+        status: 'Applied',
+        archived: true,
+      });
+      prisma.job.update.mockResolvedValue({ id: 'j1' });
+      await service.update('j1', 'u1', { archived: false });
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'j1' },
+        data: { archived: false, archivedAt: null },
+      });
+    });
+
+    it('leaves archivedAt alone when archived is unchanged', async () => {
+      prisma.job.findFirst.mockResolvedValue({
+        id: 'j1',
+        userId: 'u1',
+        status: 'Applied',
+        archived: false,
+      });
+      prisma.job.update.mockResolvedValue({ id: 'j1' });
+      await service.update('j1', 'u1', { archived: false, notes: 'hi' });
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'j1' },
+        data: { archived: false, notes: 'hi' },
       });
     });
   });

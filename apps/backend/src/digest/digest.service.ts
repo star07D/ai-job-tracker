@@ -69,7 +69,8 @@ export class DigestService {
     let emailsSent = 0;
 
     for (const user of users) {
-      const { dueItems, staleItems } = this.classify(user.jobs, now);
+      const activeJobs = user.jobs.filter((j) => !j.archived);
+      const { dueItems, staleItems } = this.classify(activeJobs, now);
       if (dueItems.length === 0 && staleItems.length === 0) continue;
 
       try {

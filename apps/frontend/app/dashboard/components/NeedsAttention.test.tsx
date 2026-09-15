@@ -32,6 +32,8 @@ function makeJob(over: Partial<Job>): Job {
     appliedDate: iso(-30),
     createdAt: iso(-30),
     statusChangedAt: iso(-1),
+    tags: [],
+    archived: false,
     ...over,
   };
 }

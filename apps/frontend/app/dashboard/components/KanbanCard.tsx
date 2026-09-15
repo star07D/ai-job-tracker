@@ -94,6 +94,18 @@ export function KanbanCard({
                 </span>
               )}
             </div>
+            {job.tags.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {job.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[10px] font-medium text-fg-subtle"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </button>
         </div>
       )}

@@ -52,5 +52,8 @@ model Job {
   contactName      String?
   contactEmail     String?
   contactLinkedin  String?
+  tags             String[]  @default([])
+  archived         Boolean   @default(false)
+  archivedAt       DateTime?
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -127,6 +127,27 @@ describe('DigestService', () => {
     expect(result.emailsSent).toBe(0);
   });
 
+  it('ignores archived jobs even if they are stale or overdue', async () => {
+    prisma.user.findMany.mockResolvedValue([
+      {
+        email: 'e@example.com',
+        jobs: [
+          job({ nextActionDue: daysAgo(2), archived: true }),
+          job({
+            status: 'Applied',
+            statusChangedAt: daysAgo(30),
+            archived: true,
+          }),
+        ],
+      },
+    ]);
+
+    const result = await service.run();
+
+    expect(email.send).not.toHaveBeenCalled();
+    expect(result).toEqual({ usersChecked: 1, emailsSent: 0 });
+  });
+
   it('skips a user with nothing due or stale', async () => {
     prisma.user.findMany.mockResolvedValue([
       { email: 'd@example.com', jobs: [job({ statusChangedAt: daysAgo(1) })] },

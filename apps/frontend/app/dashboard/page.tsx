@@ -24,7 +24,7 @@ import {
   jobToForm,
 } from "./components/JobFormDialog";
 
-import { createJob, deleteJob, getJobs, updateJob } from "@/lib/api";
+import { createJob, deleteJob, getJobs, setJobArchived, updateJob } from "@/lib/api";
 import { Job } from "@/lib/types";
 import { needsAttention } from "@/lib/due";
 import { staleCount } from "@/lib/stale";
@@ -38,8 +38,10 @@ function DashboardContent() {
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
+  const [filterTag, setFilterTag] = useState("All");
   const [sortBy, setSortBy] = useState("Newest");
   const [view, setView] = useState<DashboardView>("list");
+  const [showArchived, setShowArchived] = useState(false);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<JobFormValues | null>(null);
@@ -112,16 +114,42 @@ function DashboardContent() {
     }
   }
 
+  async function toggleArchived(job: Job) {
+    const prev = jobs;
+    const archived = !job.archived;
+    setJobs((j) =>
+      j.map((x) => (x.id === job.id ? { ...x, archived } : x)),
+    );
+    try {
+      await setJobArchived(job.id, archived);
+      toast.success(archived ? "Application archived" : "Application restored");
+    } catch (error) {
+      setJobs(prev);
+      toast.error(error instanceof Error ? error.message : "Failed to update");
+    }
+  }
+
+  // Active pipeline — everything that isn't archived. Drives the stats strip
+  // and needs-attention regardless of the "Archived" toggle in the toolbar.
+  const activeJobs = useMemo(() => jobs.filter((j) => !j.archived), [jobs]);
+
+  const allTags = useMemo(
+    () => Array.from(new Set(jobs.flatMap((j) => j.tags))).sort(),
+    [jobs],
+  );
+
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    const list = jobs.filter((job) => {
+    const base = showArchived ? jobs : activeJobs;
+    const list = base.filter((job) => {
       const matchesSearch =
         !q ||
         job.title.toLowerCase().includes(q) ||
         job.company.toLowerCase().includes(q);
       const matchesStatus =
         filterStatus === "All" || job.status === filterStatus;
-      return matchesSearch && matchesStatus;
+      const matchesTag = filterTag === "All" || job.tags.includes(filterTag);
+      return matchesSearch && matchesStatus && matchesTag;
     });
 
     const byDate = (a: Job, b: Job) =>
@@ -133,20 +161,28 @@ function DashboardContent() {
       list.sort((a, b) => a.company.localeCompare(b.company));
 
     return list;
-  }, [jobs, search, filterStatus, sortBy]);
+  }, [jobs, activeJobs, showArchived, search, filterStatus, filterTag, sortBy]);
+
+  // The kanban board is about the active pipeline — archived roles never
+  // show there even when "Archived" is toggled on in list view.
+  const boardJobs = useMemo(
+    () => filtered.filter((j) => !j.archived),
+    [filtered],
+  );
 
   const hasAttention = useMemo(
-    () => jobs.some((j) => needsAttention(j.nextActionDue)),
-    [jobs],
+    () => activeJobs.some((j) => needsAttention(j.nextActionDue)),
+    [activeJobs],
   );
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const s of JOB_STATUSES) c[s] = jobs.filter((j) => j.status === s).length;
+    for (const s of JOB_STATUSES)
+      c[s] = activeJobs.filter((j) => j.status === s).length;
     return c;
-  }, [jobs]);
+  }, [activeJobs]);
 
-  const stale = useMemo(() => staleCount(jobs), [jobs]);
+  const stale = useMemo(() => staleCount(activeJobs), [activeJobs]);
 
   return (
     <div className="min-h-screen bg-bg">
@@ -159,7 +195,9 @@ function DashboardContent() {
               Applications
             </h1>
             <p className="label-mono mt-1.5 !text-[10px]">
-              {jobs.length} tracked
+              {activeJobs.length} tracked
+              {jobs.length > activeJobs.length &&
+                ` · ${jobs.length - activeJobs.length} archived`}
             </p>
           </div>
           <Button size="sm" onClick={openAdd}>
@@ -169,22 +207,27 @@ function DashboardContent() {
 
         {!loading && !loadError && hasAttention && (
           <Reveal index={1} className="mt-6 block">
-            <NeedsAttention jobs={jobs} />
+            <NeedsAttention jobs={activeJobs} />
           </Reveal>
         )}
 
         <Reveal index={1} className="mt-6 block">
-          <Pipeline counts={counts} total={jobs.length} stale={stale} />
+          <Pipeline counts={counts} total={activeJobs.length} stale={stale} />
         </Reveal>
 
         <Reveal index={2} className="mt-8 block">
           <Toolbar
             filterStatus={filterStatus}
             setFilterStatus={setFilterStatus}
+            filterTag={filterTag}
+            setFilterTag={setFilterTag}
+            tags={allTags}
             sortBy={sortBy}
             setSortBy={setSortBy}
             view={view}
             setView={setView}
+            showArchived={showArchived}
+            setShowArchived={setShowArchived}
           />
 
           <div className="mt-4">
@@ -229,7 +272,7 @@ function DashboardContent() {
               />
             ) : view === "board" ? (
               <KanbanBoard
-                jobs={filtered}
+                jobs={boardJobs}
                 onEdit={openEdit}
                 onDelete={setDeleteTarget}
                 onStatusChange={handleStatusChange}
@@ -241,6 +284,7 @@ function DashboardContent() {
                     key={job.id}
                     job={job}
                     onEdit={openEdit}
+                    onToggleArchive={toggleArchived}
                     onDelete={setDeleteTarget}
                   />
                 ))}
