@@ -164,6 +164,16 @@ export function getMe() {
   return apiFetch<AuthUser>("/users/me");
 }
 
+/** Whether "Continue with Google" should be shown — set up server-side or not. */
+export function getAuthConfig() {
+  return apiFetch<{ googleEnabled: boolean }>("/auth/config");
+}
+
+/** Full-page navigation target for the "Continue with Google" button. */
+export function googleAuthUrl() {
+  return `${API_URL}/auth/google`;
+}
+
 /** Turn the daily "needs attention" email digest on or off. */
 export function updateEmailDigest(enabled: boolean) {
   return apiFetch<AuthUser>("/users/me", {

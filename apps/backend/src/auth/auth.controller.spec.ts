@@ -11,7 +11,11 @@ import { AuthService } from './auth.service';
 import { REFRESH_COOKIE_NAME, REFRESH_COOKIE_PATH } from './auth.constants';
 
 function mockResponse() {
-  return { cookie: jest.fn(), clearCookie: jest.fn() } as any;
+  return {
+    cookie: jest.fn(),
+    clearCookie: jest.fn(),
+    redirect: jest.fn(),
+  } as any;
 }
 
 describe('AuthController', () => {
@@ -21,15 +25,21 @@ describe('AuthController', () => {
     register: jest.fn(),
     refresh: jest.fn(),
     logout: jest.fn(),
+    loginWithGoogle: jest.fn(),
   };
+  let configValues: Record<string, string | undefined>;
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    configValues = {};
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
         { provide: AuthService, useValue: authService },
-        { provide: ConfigService, useValue: { get: jest.fn() } },
+        {
+          provide: ConfigService,
+          useValue: { get: jest.fn((key: string) => configValues[key]) },
+        },
       ],
     }).compile();
 
@@ -133,6 +143,74 @@ describe('AuthController', () => {
       expect(authService.logout).not.toHaveBeenCalled();
       expect(res.clearCookie).toHaveBeenCalled();
       expect(result).toEqual({ success: true });
+    });
+  });
+
+  describe('getConfig', () => {
+    it('reports Google enabled once both credentials are set', () => {
+      configValues.GOOGLE_CLIENT_ID = 'id';
+      configValues.GOOGLE_CLIENT_SECRET = 'secret';
+      expect(controller.getConfig()).toEqual({ googleEnabled: true });
+    });
+
+    it('reports Google disabled when either credential is missing', () => {
+      configValues.GOOGLE_CLIENT_ID = 'id';
+      expect(controller.getConfig()).toEqual({ googleEnabled: false });
+    });
+  });
+
+  describe('googleCallback', () => {
+    const profile = {
+      email: 'a@example.com',
+      firstName: 'A',
+      lastName: 'B',
+      googleId: 'g1',
+    };
+
+    it('logs the profile in, sets the refresh cookie, and redirects to the dashboard', async () => {
+      configValues.FRONTEND_URL = 'https://app.example.com';
+      authService.loginWithGoogle.mockResolvedValue({
+        accessToken: 'a',
+        refreshToken: 'r',
+        user: { id: 'u1' },
+      });
+      const res = mockResponse();
+
+      await controller.googleCallback({ user: profile } as any, res);
+
+      expect(authService.loginWithGoogle).toHaveBeenCalledWith(profile);
+      expect(res.cookie).toHaveBeenCalledWith(
+        REFRESH_COOKIE_NAME,
+        'r',
+        expect.objectContaining({ httpOnly: true }),
+      );
+      expect(res.redirect).toHaveBeenCalledWith(
+        'https://app.example.com/dashboard',
+      );
+    });
+
+    it('redirects to the login page with an error when Google auth failed', async () => {
+      configValues.FRONTEND_URL = 'https://app.example.com';
+      const res = mockResponse();
+
+      await controller.googleCallback({ user: undefined } as any, res);
+
+      expect(authService.loginWithGoogle).not.toHaveBeenCalled();
+      expect(res.redirect).toHaveBeenCalledWith(
+        'https://app.example.com/login?error=google',
+      );
+    });
+
+    it('redirects to the login page with an error when linking the account fails', async () => {
+      configValues.FRONTEND_URL = 'https://app.example.com';
+      authService.loginWithGoogle.mockRejectedValue(new Error('db down'));
+      const res = mockResponse();
+
+      await controller.googleCallback({ user: profile } as any, res);
+
+      expect(res.redirect).toHaveBeenCalledWith(
+        'https://app.example.com/login?error=google',
+      );
     });
   });
 });

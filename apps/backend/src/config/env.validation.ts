@@ -55,6 +55,20 @@ class EnvVars {
   @IsOptional()
   @IsString()
   DIGEST_SECRET?: string;
+
+  // Optional — Google sign-in is disabled until both of these are set.
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_ID?: string;
+
+  @IsOptional()
+  @IsString()
+  GOOGLE_CLIENT_SECRET?: string;
+
+  // Where Google redirects back after consent. Defaults to localhost for dev.
+  @IsOptional()
+  @IsUrl({ require_tld: false })
+  GOOGLE_CALLBACK_URL?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvVars {

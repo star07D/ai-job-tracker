@@ -6,6 +6,8 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt/jwt.strategy';
+import { GoogleStrategy } from './google/google.strategy';
+import { GoogleAuthGuard } from './google/google-auth.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 import { ACCESS_TOKEN_TTL } from './auth.constants';
 
@@ -26,7 +28,7 @@ import { ACCESS_TOKEN_TTL } from './auth.constants';
 
   controllers: [AuthController],
 
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, GoogleAuthGuard],
 
   exports: [JwtModule],
 })

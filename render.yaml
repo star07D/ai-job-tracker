@@ -44,3 +44,12 @@ services:
       # DIGEST_SECRET GitHub Actions secret
       - key: DIGEST_SECRET
         sync: false
+      # optional — enables "Continue with Google" (free: console.cloud.google.com)
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      # must match the authorized redirect URI on the Google OAuth client,
+      # e.g. https://rolio-api.onrender.com/auth/google/callback
+      - key: GOOGLE_CALLBACK_URL
+        sync: false

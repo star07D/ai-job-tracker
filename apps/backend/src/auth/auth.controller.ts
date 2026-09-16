@@ -1,11 +1,13 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   Req,
   Res,
   HttpCode,
   HttpStatus,
+  UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -14,6 +16,8 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { GoogleAuthGuard } from './google/google-auth.guard';
+import type { GoogleProfile } from './google/google.strategy';
 import {
   REFRESH_COOKIE_NAME,
   REFRESH_COOKIE_PATH,
@@ -84,6 +88,49 @@ export class AuthController {
     }
     res.clearCookie(REFRESH_COOKIE_NAME, { path: REFRESH_COOKIE_PATH });
     return { success: true };
+  }
+
+  /** Lets the frontend know whether to show the "Continue with Google" button. */
+  @Get('config')
+  @HttpCode(HttpStatus.OK)
+  getConfig() {
+    return {
+      googleEnabled: Boolean(
+        this.config.get<string>('GOOGLE_CLIENT_ID') &&
+        this.config.get<string>('GOOGLE_CLIENT_SECRET'),
+      ),
+    };
+  }
+
+  // Kicks off the Google OAuth handshake — GoogleAuthGuard redirects the
+  // browser to Google's consent screen as a side effect of canActivate.
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  google() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  async googleCallback(@Req() req: Request, @Res() res: Response) {
+    const profile = req.user as GoogleProfile | undefined;
+    const frontendUrl = this.frontendUrl();
+
+    if (!profile) {
+      return res.redirect(`${frontendUrl}/login?error=google`);
+    }
+
+    try {
+      const { refreshToken } = await this.authService.loginWithGoogle(profile);
+      this.setRefreshCookie(res, refreshToken);
+      res.redirect(`${frontendUrl}/dashboard`);
+    } catch {
+      res.redirect(`${frontendUrl}/login?error=google`);
+    }
+  }
+
+  private frontendUrl(): string {
+    return (this.config.get<string>('FRONTEND_URL') || 'http://localhost:3000')
+      .split(',')[0]
+      .trim();
   }
 
   private setRefreshCookie(res: Response, token: string) {

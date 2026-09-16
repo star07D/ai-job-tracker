@@ -10,6 +10,7 @@ import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { REFRESH_TOKEN_TTL_MS } from './auth.constants';
+import { GoogleProfile } from './google/google.strategy';
 
 export interface PublicUser {
   id: string;
@@ -26,7 +27,7 @@ export interface AuthTokens {
   user: PublicUser;
 }
 
-type UserRecord = PublicUser & { password: string };
+type UserRecord = PublicUser & { password: string | null };
 
 @Injectable()
 export class AuthService {
@@ -79,10 +80,43 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException('This account signs in with Google');
+    }
+
     const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    return this.issueTokens(user);
+  }
+
+  /**
+   * Finds or creates a user for a verified Google profile and issues a
+   * token pair. Google only asserts *verified* emails, so it's safe to
+   * auto-link an existing password account by email match.
+   */
+  async loginWithGoogle(profile: GoogleProfile): Promise<AuthTokens> {
+    let user = await this.prisma.user.findUnique({
+      where: { email: profile.email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          email: profile.email,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          googleId: profile.googleId,
+        },
+      });
+    } else if (!user.googleId) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { googleId: profile.googleId },
+      });
     }
 
     return this.issueTokens(user);

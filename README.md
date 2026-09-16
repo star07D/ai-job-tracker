@@ -123,6 +123,26 @@ Short-lived access tokens + refresh-token rotation, not a long-lived JWT in `loc
   reload invisible to you as a user.
 - **Logout** revokes that session's refresh token server-side, not just the cookie.
 
+### Google sign-in
+
+An optional "Continue with Google" button on login/signup, alongside email+password —
+not a replacement for it. Signing in with Google links to any existing password account
+with the same email automatically (safe, since Google only asserts *verified* emails).
+
+It's a standard OAuth 2.0 authorization-code redirect: `GET /auth/google` sends the
+browser to Google's consent screen, `GET /auth/google/callback` exchanges the code,
+finds-or-creates the user, and sets the same refresh-token cookie a password login would
+— so from there it rejoins the normal session flow above with no extra frontend code.
+Set it up:
+
+1. <https://console.cloud.google.com/apis/credentials> → **Create credentials** → **OAuth
+   client ID** → **Web application**
+2. Authorized redirect URI: `http://localhost:4000/auth/google/callback` for local dev
+   (add the Render one too once deployed — see DEPLOYING.md)
+3. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to `apps/backend/.env`
+4. Restart. Without both set, the button doesn't render — `GET /auth/config` tells the
+   frontend whether to show it — and email+password sign-in is unaffected either way.
+
 ## Layout
 
 ```

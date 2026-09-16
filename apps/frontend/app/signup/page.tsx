@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { registerUser } from "@/lib/api";
+import { getAuthConfig, registerUser } from "@/lib/api";
 import { setAccessToken, setUser } from "@/lib/auth";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/field";
@@ -21,6 +22,13 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+
+  useEffect(() => {
+    getAuthConfig()
+      .then((c) => setGoogleEnabled(c.googleEnabled))
+      .catch(() => {});
+  }, []);
 
   async function handleSignup(e: React.FormEvent) {
     e.preventDefault();
@@ -124,6 +132,17 @@ export default function SignupPage() {
           Create account
         </Button>
       </form>
+
+      {googleEnabled && (
+        <>
+          <div className="my-5 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="label-mono !text-[10px]">or</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <GoogleButton />
+        </>
+      )}
     </AuthShell>
   );
 }

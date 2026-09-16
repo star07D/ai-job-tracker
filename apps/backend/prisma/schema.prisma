@@ -10,7 +10,11 @@ datasource db {
 model User {
   id                  String         @id @default(uuid())
   email               String         @unique
-  password            String
+  // Null for accounts that only ever signed in with Google.
+  password            String?
+  // Set once a Google sign-in has been linked to this account (verified by
+  // Google, so it's safe to auto-link an existing password account by email).
+  googleId            String?        @unique
   createdAt           DateTime       @default(now())
   firstName           String?
   lastName            String?

@@ -37,6 +37,8 @@ Render reads [`render.yaml`](render.yaml) (a "Blueprint").
    | `GEMINI_API_KEY` | *optional* — enables AI interview prep. Free key at <https://aistudio.google.com/apikey>. Leave blank to ship without it. |
    | `RESEND_API_KEY` | *optional* — enables the daily email digest. Free key at <https://resend.com/api-keys>. Leave blank to ship without it. |
    | `DIGEST_SECRET` | *optional*, needed alongside `RESEND_API_KEY` — any random string; also add it as a `DIGEST_SECRET` GitHub Actions secret so the cron in `.github/workflows/email-digest.yml` can call the endpoint. See README.md "Email digest". |
+   | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | *optional* — enables "Continue with Google". Free, from <https://console.cloud.google.com/apis/credentials>. Leave blank to ship without it. |
+   | `GOOGLE_CALLBACK_URL` | *optional*, needed alongside the two above — `https://<your-render-service>.onrender.com/auth/google/callback`, and must also be added as an authorized redirect URI on the Google OAuth client. See README.md "Google sign-in". |
 3. Deploy. The build runs `prisma migrate deploy` automatically. When it's live,
    copy the service URL (e.g. `https://rolio-api.onrender.com`) and check
    `https://<that-url>/health` returns `{"status":"ok"}`.

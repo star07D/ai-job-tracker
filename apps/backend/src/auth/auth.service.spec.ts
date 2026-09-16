@@ -149,6 +149,91 @@ describe('AuthService', () => {
         service.login('a@example.com', 'wrong'),
       ).rejects.toBeInstanceOf(UnauthorizedException);
     });
+
+    it('rejects a Google-only account (no password) with a clear message', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        email: 'a@example.com',
+        password: null,
+      });
+
+      await expect(service.login('a@example.com', 'anything')).rejects.toThrow(
+        'This account signs in with Google',
+      );
+    });
+  });
+
+  describe('loginWithGoogle', () => {
+    const profile = {
+      email: 'a@example.com',
+      firstName: 'A',
+      lastName: 'B',
+      googleId: 'g1',
+    };
+
+    it('creates a new user for a first-time Google sign-in', async () => {
+      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.create.mockResolvedValue({
+        id: 'u1',
+        email: profile.email,
+        firstName: 'A',
+        lastName: 'B',
+      });
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt1' });
+
+      const result = await service.loginWithGoogle(profile);
+
+      expect(prisma.user.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          email: profile.email,
+          googleId: 'g1',
+        }),
+      });
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(result.accessToken).toBe('test.jwt.token');
+    });
+
+    it('auto-links an existing password account by verified email', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        email: profile.email,
+        firstName: 'A',
+        lastName: 'B',
+        googleId: null,
+      });
+      prisma.user.update.mockResolvedValue({
+        id: 'u1',
+        email: profile.email,
+        firstName: 'A',
+        lastName: 'B',
+        googleId: 'g1',
+      });
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt1' });
+
+      await service.loginWithGoogle(profile);
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { googleId: 'g1' },
+      });
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+
+    it('does not re-link an account that already has a googleId', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        id: 'u1',
+        email: profile.email,
+        firstName: 'A',
+        lastName: 'B',
+        googleId: 'g1',
+      });
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt1' });
+
+      await service.loginWithGoogle(profile);
+
+      expect(prisma.user.update).not.toHaveBeenCalled();
+      expect(prisma.user.create).not.toHaveBeenCalled();
+    });
   });
 
   describe('refresh', () => {
