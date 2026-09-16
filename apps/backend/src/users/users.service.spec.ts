@@ -42,6 +42,7 @@ describe('UsersService', () => {
           'firstName',
           'id',
           'lastName',
+          'shareToken',
         ].sort(),
       );
       expect(user).not.toHaveProperty('password');
@@ -71,6 +72,49 @@ describe('UsersService', () => {
       expect(call.select).not.toHaveProperty('password');
       expect(call.select).toHaveProperty('emailDigestEnabled', true);
       expect(user).not.toHaveProperty('password');
+    });
+  });
+
+  describe('enableSharing', () => {
+    it('issues a fresh token and returns only public fields', async () => {
+      prisma.user.update.mockResolvedValue({
+        id: 'u1',
+        shareToken: 'sometoken',
+      });
+
+      const user = await service.enableSharing('u1');
+
+      const call = prisma.user.update.mock.calls[0][0];
+      expect(call.where).toEqual({ id: 'u1' });
+      expect(call.data.shareToken).toMatch(/^[0-9a-f]{32}$/);
+      expect(call.select).not.toHaveProperty('password');
+      expect(user).toEqual({ id: 'u1', shareToken: 'sometoken' });
+    });
+
+    it('issues a different token each time (rotation)', async () => {
+      prisma.user.update.mockResolvedValue({});
+
+      await service.enableSharing('u1');
+      await service.enableSharing('u1');
+
+      const [first, second] = prisma.user.update.mock.calls.map(
+        (c) => c[0].data.shareToken,
+      );
+      expect(first).not.toBe(second);
+    });
+  });
+
+  describe('disableSharing', () => {
+    it('clears the share token', async () => {
+      prisma.user.update.mockResolvedValue({ id: 'u1', shareToken: null });
+
+      await service.disableSharing('u1');
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { shareToken: null },
+        select: expect.objectContaining({ shareToken: true }),
+      });
     });
   });
 });

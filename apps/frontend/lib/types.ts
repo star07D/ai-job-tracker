@@ -66,4 +66,25 @@ export interface AuthUser {
   /** Whether daily "needs attention" email digests are on. Absent right after
    * login/signup — fetch GET /users/me for the authoritative value. */
   emailDigestEnabled?: boolean;
+  /** Set while the public share link is on — build the URL as /share/<token>.
+   * Absent right after login/signup — fetch GET /users/me for the
+   * authoritative value. */
+  shareToken?: string | null;
+}
+
+/** A job as shown on someone else's public share page — trimmed of
+ * salary, notes, contact details, and next-step fields. */
+export interface PublicJob {
+  title: string;
+  company: string;
+  status: JobStatus;
+  location: string | null;
+  appliedDate: string;
+  tags: string[];
+}
+
+export interface PublicShare {
+  displayName: string;
+  trackingSince: string | null;
+  jobs: PublicJob[];
 }

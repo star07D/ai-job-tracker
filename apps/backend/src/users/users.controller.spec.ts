@@ -5,7 +5,12 @@ import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-requ
 
 describe('UsersController', () => {
   let controller: UsersController;
-  const usersService = { findById: jest.fn(), updatePreferences: jest.fn() };
+  const usersService = {
+    findById: jest.fn(),
+    updatePreferences: jest.fn(),
+    enableSharing: jest.fn(),
+    disableSharing: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -47,5 +52,35 @@ describe('UsersController', () => {
 
     expect(usersService.updatePreferences).toHaveBeenCalledWith('u1', true);
     expect(result).toEqual({ id: 'u1', emailDigestEnabled: true });
+  });
+
+  it('POST /users/me/share turns sharing on for the authenticated user', async () => {
+    usersService.enableSharing.mockResolvedValue({
+      id: 'u1',
+      shareToken: 'tok',
+    });
+
+    const req = {
+      user: { userId: 'u1', email: 'a@example.com' },
+    } as AuthenticatedRequest;
+    const result = await controller.enableSharing(req);
+
+    expect(usersService.enableSharing).toHaveBeenCalledWith('u1');
+    expect(result).toEqual({ id: 'u1', shareToken: 'tok' });
+  });
+
+  it('DELETE /users/me/share turns sharing off for the authenticated user', async () => {
+    usersService.disableSharing.mockResolvedValue({
+      id: 'u1',
+      shareToken: null,
+    });
+
+    const req = {
+      user: { userId: 'u1', email: 'a@example.com' },
+    } as AuthenticatedRequest;
+    const result = await controller.disableSharing(req);
+
+    expect(usersService.disableSharing).toHaveBeenCalledWith('u1');
+    expect(result).toEqual({ id: 'u1', shareToken: null });
   });
 });

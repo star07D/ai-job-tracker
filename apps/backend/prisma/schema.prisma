@@ -19,6 +19,9 @@ model User {
   firstName           String?
   lastName            String?
   emailDigestEnabled  Boolean        @default(false)
+  // Non-null while a public, read-only share link is turned on for this
+  // account — the token is what's in the /share/:token URL.
+  shareToken          String?        @unique
   jobs                Job[]
   refreshTokens       RefreshToken[]
 }

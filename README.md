@@ -8,9 +8,9 @@ board, freeform tags plus an archive for roles you're done tracking, a pipeline 
 with per-stage stats and a chart, a per-job detail page with a recruiter/hiring-manager
 contact card, follow-up reminders (a "next step" + due date per role, surfaced in a
 dashboard "Needs attention" strip) with an optional daily email digest, staleness flags
-on applications that have gone quiet in a stage, and two AI touches — interview prep per
-role, and autofilling a new application from a pasted job description. Light and dark
-themes.
+on applications that have gone quiet in a stage, an optional public share link for your
+pipeline, and two AI touches — interview prep per role, and autofilling a new application
+from a pasted job description. Light and dark themes.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
@@ -142,6 +142,19 @@ Set it up:
 3. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to `apps/backend/.env`
 4. Restart. Without both set, the button doesn't render — `GET /auth/config` tells the
    frontend whether to show it — and email+password sign-in is unaffected either way.
+
+## Public share link
+
+Turn it on from the account menu (top right → **Settings**) and get a `/share/<token>`
+link anyone can open without signing in — a read-only page with your pipeline stats and
+each application's role, company, status, location and tags. **Salary, notes, contact
+details and next-step text never leave the server for this page** — the public endpoint
+selects only the fields above, regardless of what the frontend asks for. Archived
+applications are excluded too.
+
+The token rotates: turning the link off (or hitting **Regenerate**) immediately
+invalidates the old one — the endpoint 404s once the token no longer matches any account.
+Off by default.
 
 ## Layout
 

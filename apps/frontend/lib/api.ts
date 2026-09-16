@@ -1,4 +1,4 @@
-import { AuthUser, Job, JobInput, ParsedJob } from "./types";
+import { AuthUser, Job, JobInput, ParsedJob, PublicShare } from "./types";
 import { getAccessToken, setAccessToken, clearSession } from "./auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -180,6 +180,21 @@ export function updateEmailDigest(enabled: boolean) {
     method: "PATCH",
     body: JSON.stringify({ emailDigestEnabled: enabled }),
   });
+}
+
+/** Turns the public share link on, issuing a fresh token either way — also
+ * how "regenerate" invalidates a previously shared link. */
+export function enableSharing() {
+  return apiFetch<AuthUser>("/users/me/share", { method: "POST" });
+}
+
+export function disableSharing() {
+  return apiFetch<AuthUser>("/users/me/share", { method: "DELETE" });
+}
+
+/** Public, unauthenticated — no bearer token is required to view a share link. */
+export function getPublicShare(token: string) {
+  return apiFetch<PublicShare>(`/public/share/${token}`);
 }
 
 export function getJobs() {

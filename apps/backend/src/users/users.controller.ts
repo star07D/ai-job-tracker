@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { UsersService } from './users.service';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
@@ -23,5 +34,17 @@ export class UsersController {
       req.user.userId,
       body.emailDigestEnabled,
     );
+  }
+
+  @Post('me/share')
+  @HttpCode(HttpStatus.OK)
+  enableSharing(@Req() req: AuthenticatedRequest) {
+    return this.usersService.enableSharing(req.user.userId);
+  }
+
+  @Delete('me/share')
+  @HttpCode(HttpStatus.OK)
+  disableSharing(@Req() req: AuthenticatedRequest) {
+    return this.usersService.disableSharing(req.user.userId);
   }
 }
