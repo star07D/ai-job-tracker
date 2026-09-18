@@ -54,6 +54,7 @@ export function AppTopbar({
               value={search}
               onChange={(e) => onSearch(e.target.value)}
               placeholder="Search applications…"
+              aria-label="Search applications"
               className="h-9 bg-surface-2 pl-9"
             />
           </div>
@@ -62,8 +63,12 @@ export function AppTopbar({
         <div className="ml-auto flex items-center gap-2">
           <ThemeToggle />
           <Dropdown
+            label="Account menu"
             trigger={() => (
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent font-display text-xs font-semibold text-accent-fg">
+              <span
+                aria-hidden="true"
+                className="grid h-8 w-8 place-items-center rounded-lg bg-accent font-display text-xs font-semibold text-accent-fg"
+              >
                 {initials}
               </span>
             )}

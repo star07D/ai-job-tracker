@@ -134,9 +134,9 @@ export function Landing() {
                 <div className="grid h-9 w-9 place-items-center rounded-lg bg-accent-soft text-accent">
                   <f.icon size={17} />
                 </div>
-                <h3 className="mt-3.5 font-display text-[15px] font-semibold">
+                <h2 className="mt-3.5 font-display text-[15px] font-semibold">
                   {f.title}
-                </h3>
+                </h2>
                 <p className="mt-1.5 text-[13.5px] text-fg-muted">{f.body}</p>
               </Reveal>
             ))}

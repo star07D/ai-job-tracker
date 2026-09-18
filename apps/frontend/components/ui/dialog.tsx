@@ -25,16 +25,40 @@ export function Dialog({
   size?: "md" | "lg";
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
 
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Focus trap — Tab/Shift+Tab cycle within the dialog instead of
+      // leaking out to (visually obscured) page content behind it.
+      if (e.key === "Tab") {
+        const panel = panelRef.current;
+        if (!panel) return;
+        const focusable = panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     },
     [onClose],
   );
 
   useEffect(() => {
     if (!open) return;
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
     document.addEventListener("keydown", handleKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -42,6 +66,9 @@ export function Dialog({
     return () => {
       document.removeEventListener("keydown", handleKey);
       document.body.style.overflow = prev;
+      // Return focus to whatever opened the dialog — otherwise it's lost
+      // to <body>, disorienting for keyboard/screen-reader users.
+      previouslyFocused.current?.focus();
     };
   }, [open, handleKey]);
 

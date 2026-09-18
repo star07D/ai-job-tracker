@@ -102,6 +102,7 @@ export function JobRow({
       </span>
 
       <Dropdown
+        label={`Actions for ${job.title}`}
         trigger={() => (
           <span className="grid h-7 w-7 place-items-center rounded-md text-fg-subtle transition-colors hover:bg-surface-3 hover:text-fg">
             <MoreHorizontal size={16} />

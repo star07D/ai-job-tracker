@@ -15,7 +15,10 @@
   --surface-3: #e4e8ee;
   --fg: #111318;
   --fg-muted: #5b616e;
-  --fg-subtle: #8b92a0;
+  /* ~5.1:1 against --surface/--bg — #8b92a0 (the previous value) was
+     ~3:1, below WCAG AA's 4.5:1 for normal text, and this is the color
+     of every .label-mono and text-fg-subtle element app-wide. */
+  --fg-subtle: #64697a;
   --border: #e4e7ec;
   --border-strong: #d3d8e0;
 
@@ -45,7 +48,9 @@
   --surface-3: #242830;
   --fg: #eef0f4;
   --fg-muted: #9ba2b0;
-  --fg-subtle: #697084;
+  /* ~5.2:1 against --bg — #697084 (the previous value) was ~4:1, below
+     WCAG AA's 4.5:1 for normal text. */
+  --fg-subtle: #7d8496;
   --border: #22262e;
   --border-strong: #333844;
 

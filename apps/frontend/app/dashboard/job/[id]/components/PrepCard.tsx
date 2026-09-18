@@ -24,7 +24,7 @@ function Section({ title, items }: { title: string; items: string[] }) {
   if (!items.length) return null;
   return (
     <div>
-      <h4 className="label-mono mb-2 !text-[10px]">{title}</h4>
+      <h3 className="label-mono mb-2 !text-[10px]">{title}</h3>
       <ul className="space-y-2">
         {items.map((item, i) => (
           <li
