@@ -156,6 +156,45 @@ The token rotates: turning the link off (or hitting **Regenerate**) immediately
 invalidates the old one — the endpoint 404s once the token no longer matches any account.
 Off by default.
 
+## Case study
+
+A few decisions worth explaining, for anyone reading the code rather than just the
+feature list above.
+
+**Auth: `localStorage` → memory + a rotating cookie.** The first version worked and is
+extremely common — sign in, get a JWT, keep it in `localStorage`, done. But a JWT in
+`localStorage` is trivially readable by an injected script, and this one lived for 7 days
+no matter what. The fix wasn't "expire it faster" (that just logs people out constantly);
+it was splitting responsibilities. A **15-minute access token that never touches
+storage** — an in-memory variable, gone on reload by design — does the actual API calls.
+A **rotating refresh token in an httpOnly cookie**, invisible to JavaScript entirely,
+silently renews it. `apps/frontend/lib/api.ts` shares one in-flight refresh promise
+across simultaneous 401s so a page firing five parallel requests doesn't trigger five
+refreshes.
+
+**Auditing the Google sign-in I'd just shipped.** After adding OAuth, I ran a security
+review against the diff instead of assuming "uses a well-known library" meant "safe." It
+found three real, specific issues, not generic advice:
+
+1. Sign-in trusted the email string Google returned without checking Google's own
+   `verified` claim — an unverified email could auto-link into someone else's existing
+   account.
+2. There was no OAuth `state` parameter, so a captured authorization URL could be replayed
+   to log a victim into an *attacker's* account (textbook RFC 6749 §10.12 login CSRF).
+   Since the app has no session middleware, the fix
+   (`apps/backend/src/auth/google/oauth-state.store.ts`) is a stateless double-submit
+   cookie rather than the OAuth library's session-backed default.
+3. A pre-existing CORS rule allowing any `*.vercel.app` origin only became dangerous once
+   the refresh-token cookie existed — combined with `credentials: true`, it would have let
+   an attacker's own free Vercel deployment read another user's session. Scoped to this
+   project's own preview URLs instead.
+
+**Privacy in the share link, enforced at the query, not the view.** The public share page
+shows role, company, status and tags to anyone with the link — never salary, notes, or a
+recruiter's contact details. That's not a client-side filter:
+`apps/backend/src/public/public.service.ts` explicitly `select`s only the fields meant to
+be public, so a future bug in the frontend can't leak more than the schema already allows.
+
 ## Layout
 
 ```
