@@ -22,8 +22,9 @@ export function KanbanColumn({
   return (
     <div
       data-testid={`kanban-column-${status}`}
-      className="flex w-[280px] shrink-0 flex-col rounded-xl border border-border bg-surface-2/50 md:w-auto"
+      className="flex w-[280px] shrink-0 flex-col rounded-2xl border-2 border-border bg-surface-2/60 md:w-auto"
     >
+      <div aria-hidden="true" className={cn("mx-3 mt-3 h-1.5 rounded-full", s.dot)} />
       <div className="flex items-center justify-between px-3 py-2.5">
         <span className="label-mono flex items-center gap-2 !text-[10px] !text-fg-muted">
           <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />

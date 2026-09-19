@@ -3,74 +3,77 @@
 @tailwind utilities;
 
 /* ============================================================
-   Rolio — "Editorial × Electric"
-   Fraunces (display) · Hanken Grotesk (UI) · IBM Plex Mono (data)
-   One electric ultramarine accent. Cool near-neutral greys.
+   Rolio — "Paper & Ink"
+   Bricolage Grotesque (display) · DM Sans (UI) · JetBrains Mono (data)
+   Warm paper, ink-black type, one vermilion accent (coral in dark).
+   Every text/background pair below clears WCAG AA (4.5:1).
    ============================================================ */
 
 :root {
-  --bg: #f7f8fa;
-  --surface: #ffffff;
-  --surface-2: #eef1f5;
-  --surface-3: #e4e8ee;
-  --fg: #111318;
-  --fg-muted: #5b616e;
-  /* ~5.1:1 against --surface/--bg — #8b92a0 (the previous value) was
-     ~3:1, below WCAG AA's 4.5:1 for normal text, and this is the color
-     of every .label-mono and text-fg-subtle element app-wide. */
-  --fg-subtle: #64697a;
-  --border: #e4e7ec;
-  --border-strong: #d3d8e0;
+  --bg: #f2eee4;
+  --surface: #fbf8f1;
+  --surface-2: #eae5d8;
+  --surface-3: #ded8c7;
+  --fg: #1c1b17;
+  --fg-muted: #575248;
+  --fg-subtle: #696357;
+  --border: #ddd6c5;
+  --border-strong: #c9c1ac;
 
-  --accent: #2e2bff;
-  --accent-hover: #211ee0;
-  --accent-fg: #ffffff;
-  --accent-soft: rgba(46, 43, 255, 0.08);
-  --accent-line: rgba(46, 43, 255, 0.26);
+  /* highlighter + hard offset shadow: the identity's signature marks */
+  --hl: #f5d547;
+  --offset: #1c1b17;
 
-  --st-applied: #5a6675;
-  --st-applied-bg: #edeff3;
-  --st-interview: #9c6408;
-  --st-interview-bg: #f7ead6;
-  --st-accepted: #0f7a4e;
-  --st-accepted-bg: #e1f1e8;
-  --st-rejected: #c33350;
-  --st-rejected-bg: #fae8ec;
+  --accent: #b4361a;
+  --accent-hover: #962c14;
+  --accent-fg: #fbf8f1;
+  --accent-soft: rgba(180, 54, 26, 0.09);
+  --accent-line: rgba(180, 54, 26, 0.3);
 
-  --shadow-card: 0 1px 2px rgba(17, 19, 24, 0.04), 0 2px 8px rgba(17, 19, 24, 0.05);
-  --shadow-pop: 0 20px 50px -16px rgba(17, 19, 24, 0.22), 0 4px 12px rgba(17, 19, 24, 0.08);
+  --st-applied: #5b564b;
+  --st-applied-bg: #e7e2d5;
+  --st-interview: #8a5600;
+  --st-interview-bg: #f3e5c4;
+  --st-accepted: #17703f;
+  --st-accepted-bg: #dcebd9;
+  --st-rejected: #9b2b57;
+  --st-rejected-bg: #f2dce4;
+
+  --shadow-card: 0 1px 0 rgba(28, 27, 23, 0.05), 0 8px 20px -12px rgba(28, 27, 23, 0.18);
+  --shadow-pop: 0 24px 60px -18px rgba(28, 27, 23, 0.3), 0 4px 12px rgba(28, 27, 23, 0.08);
 }
 
 .dark {
-  --bg: #0b0c10;
-  --surface: #131519;
-  --surface-2: #1b1e24;
-  --surface-3: #242830;
-  --fg: #eef0f4;
-  --fg-muted: #9ba2b0;
-  /* ~5.2:1 against --bg — #697084 (the previous value) was ~4:1, below
-     WCAG AA's 4.5:1 for normal text. */
-  --fg-subtle: #7d8496;
-  --border: #22262e;
-  --border-strong: #333844;
+  --bg: #11110d;
+  --surface: #191914;
+  --surface-2: #22221b;
+  --surface-3: #2c2c23;
+  --fg: #efebdd;
+  --fg-muted: #a8a293;
+  --fg-subtle: #979180;
+  --border: #2a2a21;
+  --border-strong: #3d3d31;
 
-  --accent: #7c7aff;
-  --accent-hover: #9391ff;
-  --accent-fg: #0b0c10;
-  --accent-soft: rgba(124, 122, 255, 0.13);
-  --accent-line: rgba(124, 122, 255, 0.32);
+  --hl: rgba(236, 208, 70, 0.34);
+  --offset: #ff8a63;
 
-  --st-applied: #99a1b0;
-  --st-applied-bg: rgba(153, 161, 176, 0.13);
-  --st-interview: #e2a24c;
-  --st-interview-bg: rgba(226, 162, 76, 0.14);
-  --st-accepted: #42c98a;
-  --st-accepted-bg: rgba(66, 201, 138, 0.13);
-  --st-rejected: #f76b82;
-  --st-rejected-bg: rgba(247, 107, 130, 0.14);
+  --accent: #ff8a63;
+  --accent-hover: #ffa283;
+  --accent-fg: #1a0e08;
+  --accent-soft: rgba(255, 138, 99, 0.13);
+  --accent-line: rgba(255, 138, 99, 0.34);
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-pop: 0 24px 60px -18px rgba(0, 0, 0, 0.7);
+  --st-applied: #b0aa9a;
+  --st-applied-bg: #25251e;
+  --st-interview: #e8b04a;
+  --st-interview-bg: #30271a;
+  --st-accepted: #5cd08e;
+  --st-accepted-bg: #1c2b22;
+  --st-rejected: #f07aa6;
+  --st-rejected-bg: #33212a;
+
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 24px 60px -18px rgba(0, 0, 0, 0.75);
 }
 
 @layer base {
@@ -90,7 +93,7 @@
     text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4 {
-    font-family: var(--font-display), Georgia, serif;
+    font-family: var(--font-display), system-ui, sans-serif;
     font-weight: 600;
     letter-spacing: -0.02em;
     line-height: 1.12;
@@ -111,6 +114,33 @@
   .font-data {
     font-family: var(--font-mono), ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
+  }
+  /* highlighter swipe behind the lower half of a phrase */
+  .hl {
+    background: linear-gradient(180deg, transparent 56%, var(--hl) 56%, var(--hl) 90%, transparent 90%);
+    padding: 0 0.14em;
+    margin: 0 -0.06em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  /* hero card: heavy ink border + hard offset shadow */
+  .ink-card {
+    border: 2px solid var(--fg);
+    box-shadow: 6px 6px 0 0 var(--offset);
+  }
+  /* rotated rubber-stamp label */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border: 2px solid currentColor;
+    border-radius: 0.5rem;
+    padding: 0.2rem 0.65rem;
+    transform: rotate(-3deg);
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
   /* uppercase mono label */
   .label-mono {
@@ -226,4 +256,28 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* paper grain: a barely-there noise layer over the whole app */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.dark body::before {
+  filter: invert(1);
+  opacity: 0.06;
+}
+
+/* landing marquee band */
+@keyframes rl-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.rl-marquee {
+  animation: rl-marquee 34s linear infinite;
 }

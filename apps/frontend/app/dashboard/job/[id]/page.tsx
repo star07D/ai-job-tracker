@@ -157,13 +157,18 @@ function JobDetailContent() {
         </div>
       )}
 
-      <Reveal as={Card} className="mt-5 block">
+      <Reveal
+        as={Card}
+        className="mt-5 block border-2 border-fg shadow-[6px_6px_0_0_var(--offset)]"
+      >
         <CardBody className="flex flex-col justify-between gap-5 sm:flex-row">
           <div>
-            <h1 className="font-display text-[26px] font-semibold tracking-[-0.02em]">
+            <h1 className="font-display text-[2.3rem] font-extrabold leading-[1.02] tracking-[-0.035em] md:text-[3rem]">
               {job.title}
             </h1>
-            <p className="mt-1 font-medium text-fg-muted">{job.company}</p>
+            <p className="mt-2.5 text-lg font-medium text-fg-muted">
+              <span className="hl">{job.company}</span>
+            </p>
             <div className="label-mono mt-3.5 flex flex-wrap gap-x-4 gap-y-1.5 !text-[10px]">
               {job.location && (
                 <span className="inline-flex items-center gap-1.5">
@@ -202,7 +207,10 @@ function JobDetailContent() {
           </div>
 
           <div className="flex flex-col items-start gap-2 sm:items-end">
-            <StatusBadge status={job.status} />
+            <StatusBadge
+              status={job.status}
+              className="rotate-[-3deg] border-2 border-current !px-3 !py-1 !text-[12px]"
+            />
             <Select
               value={job.status}
               onChange={(e) => changeStatus(e.target.value as JobStatus)}

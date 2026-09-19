@@ -7,7 +7,6 @@ import { Inbox } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/ui/badge";
@@ -74,10 +73,11 @@ export default function SharePage() {
         ) : (
           <>
             <Reveal className="block">
-              <h1 className="font-display text-2xl font-semibold tracking-[-0.02em]">
-                {share.displayName}&apos;s job search
+              <p className="label-mono !text-[11px]">A shared pipeline</p>
+              <h1 className="mt-2 font-display text-[2.4rem] font-extrabold leading-[1.02] tracking-[-0.035em] md:text-5xl">
+                <span className="hl">{share.displayName}&apos;s job search</span>
               </h1>
-              <p className="label-mono mt-1.5 !text-[10px]">
+              <p className="label-mono mt-3 !text-[10px]">
                 {`${share.jobs.length} application${share.jobs.length === 1 ? "" : "s"}`}
                 {share.trackingSince && ` · tracking since ${fmt(share.trackingSince)}`}
               </p>
@@ -95,14 +95,14 @@ export default function SharePage() {
                   description="No active applications to show."
                 />
               ) : (
-                <Card className="divide-y divide-border overflow-hidden p-0">
+                <div className="space-y-2.5">
                   {share.jobs.map((job, i) => (
                     <div
                       key={i}
-                      className="flex items-center gap-4 px-4 py-3.5"
+                      className="flex items-center gap-4 rounded-2xl border border-border bg-surface px-5 py-4 shadow-card"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[14.5px] font-semibold">
+                        <div className="truncate font-display text-[17px] font-bold tracking-[-0.01em]">
                           {job.title}
                         </div>
                         <div className="mt-0.5 truncate text-[12.5px] text-fg-muted">
@@ -127,7 +127,7 @@ export default function SharePage() {
                       </span>
                     </div>
                   ))}
-                </Card>
+                </div>
               )}
             </Reveal>
 

@@ -54,10 +54,13 @@ Per-workspace scripts still work with `-w`, e.g. `npm run start:dev -w backend`.
 
 ## Design
 
-Frontend visual system — "Editorial × Electric":
+Frontend visual system — "Paper & Ink":
 
-- **Type:** Fraunces (display), Hanken Grotesk (UI), IBM Plex Mono (data/labels)
-- **Colour:** cool near-neutral greys + one electric ultramarine accent, used solid
+- **Type:** Bricolage Grotesque (display), DM Sans (UI), JetBrains Mono (data/labels)
+- **Colour:** warm paper, ink-black type, one vermilion accent (coral in dark mode). Every
+  text/background pair clears WCAG AA.
+- **Signature marks:** highlighter swipes (`.hl`), hard-offset "ink" cards (`.ink-card`),
+  rubber-stamp labels (`.stamp`), a faint paper grain, and keycap buttons that press down
 - **Theme:** light + dark on CSS variables (`app/globals.css`), toggled via `next-themes`
 - **Primitives:** `apps/frontend/components/ui/*` (button, input, select, card, dialog,
   badge, dropdown, …)

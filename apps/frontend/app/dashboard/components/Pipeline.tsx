@@ -31,7 +31,7 @@ export function Pipeline({
                 <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
                 {status}
               </div>
-              <div className="mt-2 font-display text-[26px] font-semibold leading-none">
+              <div className="mt-2 font-display text-[40px] font-extrabold leading-none tracking-[-0.03em]">
                 <CountUp value={counts[status] ?? 0} />
               </div>
             </div>

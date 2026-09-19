@@ -7,7 +7,6 @@ import { Plus, Inbox } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AppTopbar } from "@/components/app/AppTopbar";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Reveal } from "@/components/ui/motion";
@@ -189,30 +188,36 @@ function DashboardContent() {
       <AppTopbar search={search} onSearch={setSearch} />
 
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-8">
-        <Reveal className="flex items-end justify-between gap-4">
+        <Reveal className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-[-0.02em]">
+            <p className="label-mono !text-[11px]">Your pipeline</p>
+            <h1 className="mt-2 font-display text-[2.6rem] font-extrabold leading-none tracking-[-0.035em] md:text-[3.4rem]">
               Applications
             </h1>
-            <p className="label-mono mt-1.5 !text-[10px]">
-              {activeJobs.length} tracked
+            <p className="mt-3 text-[15px] text-fg-muted">
+              <span className="font-semibold text-fg">{activeJobs.length}</span>{" "}
+              in play
               {jobs.length > activeJobs.length &&
                 ` · ${jobs.length - activeJobs.length} archived`}
             </p>
           </div>
-          <Button size="sm" onClick={openAdd}>
-            <Plus size={15} /> Add application
+          <Button onClick={openAdd}>
+            <Plus size={16} /> Add application
           </Button>
         </Reveal>
 
-        {!loading && !loadError && hasAttention && (
-          <Reveal index={1} className="mt-6 block">
-            <NeedsAttention jobs={activeJobs} />
-          </Reveal>
-        )}
-
-        <Reveal index={1} className="mt-6 block">
+        <Reveal
+          index={1}
+          className={
+            !loading && !loadError && hasAttention
+              ? "mt-8 grid items-start gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]"
+              : "mt-8 block"
+          }
+        >
           <Pipeline counts={counts} total={activeJobs.length} stale={stale} />
+          {!loading && !loadError && hasAttention && (
+            <NeedsAttention jobs={activeJobs} />
+          )}
         </Reveal>
 
         <Reveal index={2} className="mt-8 block">
@@ -278,7 +283,7 @@ function DashboardContent() {
                 onStatusChange={handleStatusChange}
               />
             ) : (
-              <Card className="divide-y divide-border overflow-hidden p-0">
+              <div className="space-y-2.5">
                 {filtered.map((job) => (
                   <JobRow
                     key={job.id}
@@ -288,7 +293,7 @@ function DashboardContent() {
                     onDelete={setDeleteTarget}
                   />
                 ))}
-              </Card>
+              </div>
             )}
           </div>
         </Reveal>

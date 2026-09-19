@@ -6,10 +6,10 @@ type Size = "sm" | "md" | "lg" | "icon";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-accent text-accent-fg shadow-[0_6px_18px_-6px_var(--accent-line)] hover:bg-accent-hover hover:-translate-y-px",
+    "bg-accent text-accent-fg shadow-[0_3px_0_0_var(--accent-hover)] hover:-translate-y-px hover:bg-accent-hover hover:shadow-[0_4px_0_0_var(--accent-hover)] active:translate-y-[3px] active:shadow-[0_0_0_0_var(--accent-hover)]",
   secondary: "bg-surface-2 text-fg hover:bg-surface-3",
   outline:
-    "border border-border-strong bg-surface text-fg hover:bg-surface-2 hover:border-accent-line",
+    "border-2 border-fg bg-surface text-fg shadow-[0_3px_0_0_var(--fg)] hover:-translate-y-px hover:shadow-[0_4px_0_0_var(--fg)] active:translate-y-[3px] active:shadow-[0_0_0_0_var(--fg)]",
   ghost: "text-fg-muted hover:bg-surface-2 hover:text-fg",
   destructive: "bg-[var(--st-rejected)] text-white hover:opacity-90",
 };

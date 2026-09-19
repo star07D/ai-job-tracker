@@ -9,10 +9,10 @@ export function DashboardPreview() {
   ] as const;
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border-strong bg-surface shadow-pop">
+    <div className="ink-card overflow-hidden rounded-2xl bg-surface">
       <div className="flex items-center gap-2.5 border-b border-border px-3.5 py-3">
         <LogoMark className="h-[18px] w-[18px]" />
-        <span className="font-display text-xs font-semibold">Rolio</span>
+        <span className="font-display text-sm font-bold">Rolio</span>
         <span className="ml-2 h-5 flex-1 rounded-md bg-surface-2" />
       </div>
       <div className="space-y-3 p-4">
@@ -23,7 +23,7 @@ export function DashboardPreview() {
             ["1", "Offer"],
           ].map(([n, l]) => (
             <div key={l} className="rounded-lg border border-border p-2.5">
-              <div className="font-display text-lg font-semibold">{n}</div>
+              <div className="font-display text-2xl font-extrabold leading-none">{n}</div>
               <div className="label-mono !text-[9px]">{l}</div>
             </div>
           ))}

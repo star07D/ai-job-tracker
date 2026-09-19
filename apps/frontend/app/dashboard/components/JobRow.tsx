@@ -45,14 +45,14 @@ export function JobRow({
   return (
     <div
       className={cn(
-        "group relative flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2",
+        "group relative flex items-center gap-4 rounded-2xl border border-border bg-surface px-5 py-4 shadow-card transition-colors hover:border-accent-line",
         job.archived && "opacity-60",
       )}
     >
-      <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-transparent transition-colors group-hover:bg-accent" />
+      <span className="absolute inset-y-4 left-0 w-[3px] rounded-full bg-transparent transition-colors group-hover:bg-accent" />
 
       <Link href={`/dashboard/job/${job.id}`} className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 text-[14.5px] font-semibold">
+        <div className="flex items-center gap-1.5 font-display text-[17px] font-bold tracking-[-0.01em]">
           <span className="truncate">{job.title}</span>
           {job.archived && (
             <Archive size={12} className="shrink-0 text-fg-subtle" />
