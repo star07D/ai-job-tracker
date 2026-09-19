@@ -154,6 +154,11 @@ export function JobFormDialog({
     try {
       await onSubmit(values);
       onClose();
+    } catch (err) {
+      // keep the dialog open so nothing typed is lost, and say what went wrong
+      toast.error(
+        err instanceof Error ? err.message : "Couldn't save this application.",
+      );
     } finally {
       setSaving(false);
     }

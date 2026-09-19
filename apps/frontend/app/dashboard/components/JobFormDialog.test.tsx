@@ -215,6 +215,26 @@ describe("<JobFormDialog />", () => {
     });
   });
 
+  it("shows the server's error and stays open when saving fails", async () => {
+    const onSubmit = vi
+      .fn()
+      .mockRejectedValue(new ApiError("property tags should not exist", 400));
+    const onClose = vi.fn();
+    render(
+      <JobFormDialog open initial={null} onClose={onClose} onSubmit={onSubmit} />,
+    );
+
+    await userEvent.type(screen.getByLabelText("Role"), "Frontend Dev");
+    await userEvent.type(screen.getByLabelText("Company"), "Linear");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Add application" }),
+    );
+
+    expect(toast.error).toHaveBeenCalledWith("property tags should not exist");
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Role")).toHaveValue("Frontend Dev");
+  });
+
   it("submits the entered contact info", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     render(
