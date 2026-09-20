@@ -71,3 +71,14 @@ origin.
 - Push to `main` → both hosts rebuild.
 - New Prisma migration: commit it under `apps/backend/prisma/migrations/`; the
   Render build runs `prisma migrate deploy` on every deploy.
+
+## Troubleshooting
+
+- **A failed Render deploy is silent** — Render keeps serving the last good build,
+  so the app looks fine until the frontend sends something the old backend rejects
+  (e.g. new fields → `400 property … should not exist`). After a push, check
+  **rolio-api → Events** shows **Live**, or that `/auth/config` returns `200`.
+- **`nest: not found` in the build log** — the build needs devDependencies (Nest CLI,
+  TypeScript), but `NODE_ENV=production` makes a bare `npm ci` skip them. The build
+  command must be `npm ci --include=dev`. If you ever edit the build command in the
+  Render dashboard (which overrides `render.yaml`), keep that flag.
