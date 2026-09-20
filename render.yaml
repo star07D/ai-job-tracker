@@ -15,8 +15,10 @@ services:
     autoDeployTrigger: commit
     branch: main
     healthCheckPath: /health
+    # --include=dev: NODE_ENV=production (below) makes a bare `npm ci` skip
+    # devDependencies, and the Nest CLI + TypeScript needed to build live there
     buildCommand: >-
-      npm ci &&
+      npm ci --include=dev &&
       npm run build -w backend &&
       ( cd apps/backend && npx prisma migrate deploy )
     startCommand: node apps/backend/dist/main
