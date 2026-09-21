@@ -88,3 +88,32 @@ export interface PublicShare {
   trackingSince: string | null;
   jobs: PublicJob[];
 }
+
+/** GET /insights — computed server-side from each job's status history. */
+export interface InsightTagStat {
+  tag: string;
+  total: number;
+  responded: number;
+  interviewed: number;
+}
+
+export interface Insights {
+  total: number;
+  byStatus: Record<string, number>;
+  funnel: {
+    applied: number;
+    responded: number;
+    interviewed: number;
+    offers: number;
+  };
+  /** 0–1, or null while there are too few applications to say anything. */
+  replyRate: number | null;
+  interviewRate: number | null;
+  daysToResponse: { median: number | null; n: number };
+  daysToDecision: { median: number | null; n: number };
+  /** last 8 weeks, oldest first; weekStart is a Monday (YYYY-MM-DD, UTC). */
+  weekly: { weekStart: string; count: number }[];
+  tags: InsightTagStat[];
+  silent: number;
+  takeaways: string[];
+}

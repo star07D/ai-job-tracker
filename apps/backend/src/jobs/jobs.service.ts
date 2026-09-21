@@ -26,6 +26,14 @@ export class JobsService {
         contactEmail: data.contactEmail,
         contactLinkedin: data.contactLinkedin,
         tags: normalizeTags(data.tags),
+        // first history row: origin unknown, entered its status when applied
+        statusEvents: {
+          create: {
+            fromStatus: null,
+            toStatus: data.status,
+            at: data.appliedDate,
+          },
+        },
 
         user: {
           connect: {
@@ -65,17 +73,34 @@ export class JobsService {
   async update(id: string, userId: string, data: UpdateJobDto) {
     const existing = await this.findOne(id, userId);
 
-    const statusChanged =
-      data.status !== undefined && data.status !== existing.status;
+    // the new status when it actually differs, else undefined
+    const newStatus =
+      data.status !== undefined && data.status !== existing.status
+        ? data.status
+        : undefined;
     const archivedChanged =
       data.archived !== undefined && data.archived !== existing.archived;
+
+    const now = new Date();
 
     return this.prisma.job.update({
       where: { id },
       data: {
         ...data,
         ...(data.tags !== undefined ? { tags: normalizeTags(data.tags) } : {}),
-        ...(statusChanged ? { statusChangedAt: new Date() } : {}),
+        ...(newStatus
+          ? {
+              statusChangedAt: now,
+              // same write as the status change, so history can't drift from it
+              statusEvents: {
+                create: {
+                  fromStatus: existing.status,
+                  toStatus: newStatus,
+                  at: now,
+                },
+              },
+            }
+          : {}),
         ...(archivedChanged
           ? { archivedAt: data.archived ? new Date() : null }
           : {}),

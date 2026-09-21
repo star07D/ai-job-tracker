@@ -1,4 +1,11 @@
-import { AuthUser, Job, JobInput, ParsedJob, PublicShare } from "./types";
+import {
+  AuthUser,
+  Insights,
+  Job,
+  JobInput,
+  ParsedJob,
+  PublicShare,
+} from "./types";
 import { getAccessToken, setAccessToken, clearSession } from "./auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -231,6 +238,11 @@ export function setJobArchived(id: string, archived: boolean) {
     method: "PATCH",
     body: JSON.stringify({ archived }),
   });
+}
+
+/** Funnel, timings and takeaways computed from the user's status history. */
+export function getInsights() {
+  return apiFetch<Insights>("/insights");
 }
 
 /** Generate (or regenerate) AI interview prep for a job. Returns the updated job. */

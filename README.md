@@ -8,7 +8,8 @@ board, freeform tags plus an archive for roles you're done tracking, a pipeline 
 with per-stage stats and a chart, a per-job detail page with a recruiter/hiring-manager
 contact card, follow-up reminders (a "next step" + due date per role, surfaced in a
 dashboard "Needs attention" strip) with an optional daily email digest, staleness flags
-on applications that have gone quiet in a stage, an optional public share link for your
+on applications that have gone quiet in a stage, an Insights page (funnel, reply rate and
+timings from your own history), an optional public share link for your
 pipeline, and two AI touches — interview prep per role, and autofilling a new application
 from a pasted job description. Light and dark themes.
 
@@ -145,6 +146,21 @@ Set it up:
 3. Add `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` to `apps/backend/.env`
 4. Restart. Without both set, the button doesn't render — `GET /auth/config` tells the
    frontend whether to show it — and email+password sign-in is unaffected either way.
+
+## Insights
+
+`/dashboard/insights` turns your applications into answers: reply rate, interview rate,
+median days to hear back, a funnel (applied → heard back → interviewed → offer), applications
+per week, a per-tag breakdown, and a few plain-language takeaways ("Applications tagged
+'remote' reached interview 3 of 6 times, vs 2 of 8 without it"). No AI involved — it's
+deterministic maths in `apps/backend/src/insights/insights.calc.ts`, unit-tested against
+fixed dates.
+
+It works because every status change is recorded as a `StatusEvent` (written in the same
+query as the job update), so the app knows the *path* a job took, not just where it ended
+up. Two honesty rules: history from before that table existed has an unknown origin, so it
+counts towards totals but is left out of timings and the interview rate; and anything
+resting on fewer than 3 data points shows "—" instead of a percentage.
 
 ## Public share link
 

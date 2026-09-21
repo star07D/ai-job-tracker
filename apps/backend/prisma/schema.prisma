@@ -63,4 +63,20 @@ model Job {
   archived         Boolean   @default(false)
   archivedAt       DateTime?
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  statusEvents     StatusEvent[]
+}
+
+// One row per status transition, so the Insights page can see the path a job
+// took (not just where it ended up). fromStatus is null when the origin is
+// unknown — a job created in its current status, or history backfilled before
+// this table existed — and the maths treats those rows as "path unknown".
+model StatusEvent {
+  id         String   @id @default(cuid())
+  jobId      String
+  fromStatus String?
+  toStatus   String
+  at         DateTime @default(now())
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
 }

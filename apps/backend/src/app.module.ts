@@ -11,6 +11,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { PrepModule } from './prep/prep.module';
 import { DigestModule } from './digest/digest.module';
 import { PublicModule } from './public/public.module';
+import { InsightsModule } from './insights/insights.module';
 import { validateEnv } from './config/env.validation';
 
 @Module({
@@ -33,6 +34,7 @@ import { validateEnv } from './config/env.validation';
     PrepModule,
     DigestModule,
     PublicModule,
+    InsightsModule,
   ],
   controllers: [AppController],
   providers: [

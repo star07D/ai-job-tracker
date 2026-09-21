@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Search, LogOut, Settings } from "lucide-react";
+import { cn } from "@/lib/cn";
 import { Logo } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Input } from "@/components/ui/input";
@@ -17,6 +20,7 @@ export function AppTopbar({
   search?: string;
   onSearch?: (v: string) => void;
 }) {
+  const pathname = usePathname();
   const [email, setEmail] = useState<string | null>(null);
   const [initials, setInitials] = useState("··");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -43,6 +47,21 @@ export function AppTopbar({
     <header className="sticky top-0 z-30 border-b border-border bg-surface/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4 md:px-8">
         <Logo size="sm" href="/dashboard" />
+
+        <Link
+          href="/dashboard/insights"
+          aria-current={
+            pathname === "/dashboard/insights" ? "page" : undefined
+          }
+          className={cn(
+            "rounded-lg px-2.5 py-1.5 text-[13px] font-semibold transition-colors hover:bg-surface-2 hover:text-fg",
+            pathname === "/dashboard/insights"
+              ? "bg-accent-soft text-accent"
+              : "text-fg-muted",
+          )}
+        >
+          Insights
+        </Link>
 
         {onSearch && (
           <div className="relative ml-2 hidden max-w-sm flex-1 md:block">

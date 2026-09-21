@@ -52,6 +52,29 @@ describe('JobsService', () => {
       });
     });
 
+    it('records the first history row alongside the job', async () => {
+      prisma.job.create.mockResolvedValue({ id: 'j1' });
+
+      await service.create('u1', {
+        title: 'Dev',
+        company: 'Acme',
+        status: 'Interview',
+        appliedDate: '2026-01-02T00:00:00.000Z',
+      });
+
+      expect(prisma.job.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          statusEvents: {
+            create: {
+              fromStatus: null,
+              toStatus: 'Interview',
+              at: '2026-01-02T00:00:00.000Z',
+            },
+          },
+        }),
+      });
+    });
+
     it('normalizes tags: trims, drops blanks, dedupes case-insensitively', async () => {
       prisma.job.create.mockResolvedValue({ id: 'j1' });
 
@@ -134,8 +157,31 @@ describe('JobsService', () => {
       await service.update('j1', 'u1', { status: 'Interview' });
       expect(prisma.job.update).toHaveBeenCalledWith({
         where: { id: 'j1' },
-        data: { status: 'Interview', statusChangedAt: expect.any(Date) },
+        data: {
+          status: 'Interview',
+          statusChangedAt: expect.any(Date),
+          statusEvents: {
+            create: {
+              fromStatus: 'Applied',
+              toStatus: 'Interview',
+              at: expect.any(Date),
+            },
+          },
+        },
       });
+    });
+
+    it('records no history row when the status is unchanged', async () => {
+      prisma.job.findFirst.mockResolvedValue({
+        id: 'j1',
+        userId: 'u1',
+        status: 'Applied',
+      });
+      prisma.job.update.mockResolvedValue({ id: 'j1' });
+      await service.update('j1', 'u1', { status: 'Applied', title: 'x' });
+      const { data } = prisma.job.update.mock.calls[0][0];
+      expect(data.statusEvents).toBeUndefined();
+      expect(data.statusChangedAt).toBeUndefined();
     });
 
     it('leaves statusChangedAt alone for a non-status edit', async () => {
