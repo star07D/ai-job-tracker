@@ -123,6 +123,24 @@ describe('computeInsights', () => {
     ]);
   });
 
+  it('says "the same day" rather than "within 0 days"', () => {
+    const quick = (status: string) =>
+      job({
+        status,
+        appliedAgo: 10,
+        statusChangedAt: ago(10),
+        statusEvents: [ev(null, 'Applied', 10), ev('Applied', status, 10)],
+      });
+    const r = computeInsights(
+      [quick('Interview'), quick('Rejected'), quick('Interview')],
+      NOW,
+    );
+    expect(r.daysToResponse.median).toBe(0);
+    expect(r.takeaways[0]).toBe(
+      "You've heard back on 3 of 3 applications (100%), usually the same day.",
+    );
+  });
+
   it('buckets applications into the last 8 Monday-start weeks', () => {
     const r = computeInsights(
       [

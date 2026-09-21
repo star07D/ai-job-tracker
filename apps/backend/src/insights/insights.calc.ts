@@ -154,7 +154,9 @@ function buildTakeaways(
   out.push(
     `You've heard back on ${funnel.responded} of ${funnel.applied} applications (${pct(funnel.responded, funnel.applied)}%)` +
       (daysToResponse.median !== null
-        ? `, usually within ${daysToResponse.median} day${daysToResponse.median === 1 ? '' : 's'}.`
+        ? daysToResponse.median === 0
+          ? ', usually the same day.'
+          : `, usually within ${daysToResponse.median} day${daysToResponse.median === 1 ? '' : 's'}.`
         : '.'),
   );
 
