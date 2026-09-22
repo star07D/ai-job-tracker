@@ -7,38 +7,10 @@ import toast from "react-hot-toast";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Section } from "@/components/ui/bullet-section";
 import { ApiError, generatePrep } from "@/lib/api";
+import { relativeTime } from "@/lib/format";
 import { Job, JobPrep } from "@/lib/types";
-
-function relativeTime(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.round(hrs / 24)}d ago`;
-}
-
-function Section({ title, items }: { title: string; items: string[] }) {
-  if (!items.length) return null;
-  return (
-    <div>
-      <h3 className="label-mono mb-2 !text-[10px]">{title}</h3>
-      <ul className="space-y-2">
-        {items.map((item, i) => (
-          <li
-            key={i}
-            className="flex gap-2.5 rounded-lg bg-surface-2 px-3 py-2.5 text-[13px] leading-relaxed"
-          >
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 export function PrepCard({
   job,

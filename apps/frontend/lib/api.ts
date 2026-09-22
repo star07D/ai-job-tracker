@@ -40,7 +40,10 @@ async function apiFetch<T>(
   const token = getAccessToken();
 
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
+    // a FormData body needs the browser's own multipart boundary — never ours
+    ...(init.body instanceof FormData
+      ? {}
+      : { "Content-Type": "application/json" }),
     ...(init.headers as Record<string, string>),
   };
 
@@ -256,5 +259,28 @@ export function parseJobDescription(description: string) {
     method: "POST",
     body: JSON.stringify({ description }),
     timeoutMs: 45_000,
+  });
+}
+
+/** Upload a résumé (PDF or .docx) — parsed to text server-side, no file kept. */
+export function uploadResume(file: File) {
+  const formData = new FormData();
+  formData.append("resume", file);
+  return apiFetch<AuthUser>("/users/me/resume", {
+    method: "POST",
+    body: formData,
+    timeoutMs: 30_000,
+  });
+}
+
+export function removeResume() {
+  return apiFetch<AuthUser>("/users/me/resume", { method: "DELETE" });
+}
+
+/** Score (or re-score) how well the stored résumé fits this job. Returns the updated job. */
+export function generateMatch(jobId: string) {
+  return apiFetch<Job>(`/jobs/${jobId}/match`, {
+    method: "POST",
+    timeoutMs: 60_000,
   });
 }

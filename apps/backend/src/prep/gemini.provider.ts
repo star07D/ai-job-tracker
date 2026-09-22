@@ -8,6 +8,8 @@ import {
   PrepInput,
   PrepProvider,
   PrepUnavailableError,
+  ResumeMatchInput,
+  ResumeMatchResult,
 } from './prep.types';
 
 const DEFAULT_MODEL = 'gemini-3.5-flash';
@@ -75,6 +77,31 @@ const EXTRACT_SCHEMA = {
   propertyOrdering: ['title', 'company', 'location', 'salary', 'notes'],
 };
 
+const MATCH_INSTRUCTION = `You are an exacting technical recruiter scoring how well a candidate's résumé
+fits ONE specific role. Be honest, not encouraging — a mediocre fit should get a mediocre score.
+
+Rules:
+- "score" is 0-100: how well the résumé's actual, evidenced experience matches what this
+  role likely requires, inferred from the title, company and any notes given. Do not
+  inflate it to be kind.
+- "strengths" are concrete overlaps between the résumé and the role — specific skills,
+  years of experience, domains, tools — not generic praise like "hard worker".
+- "gaps" are concrete, likely-required things the résumé shows no evidence of.
+- "summary" is 1-2 sentences giving the headline verdict.
+- Keep each list item to one sentence.`;
+
+const MATCH_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    score: { type: Type.NUMBER },
+    summary: { type: Type.STRING },
+    strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+    gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+  },
+  required: ['score', 'summary', 'strengths', 'gaps'],
+  propertyOrdering: ['score', 'summary', 'strengths', 'gaps'],
+};
+
 @Injectable()
 export class GeminiProvider implements PrepProvider {
   private readonly logger = new Logger(GeminiProvider.name);
@@ -122,6 +149,30 @@ export class GeminiProvider implements PrepProvider {
     });
 
     return this.parseExtract(text);
+  }
+
+  async matchResume(input: ResumeMatchInput): Promise<ResumeMatchResult> {
+    const contents = [
+      `Role: ${input.title}`,
+      `Company: ${input.company}`,
+      input.notes?.trim()
+        ? `Notes about the role:\n${input.notes.trim()}`
+        : null,
+      '',
+      "Candidate's résumé:",
+      input.resumeText,
+    ]
+      .filter((line) => line !== null)
+      .join('\n');
+
+    const text = await this.request(contents, {
+      systemInstruction: MATCH_INSTRUCTION,
+      responseSchema: MATCH_SCHEMA,
+      // judgment, not creativity — the score should be consistent run to run
+      temperature: 0.3,
+    });
+
+    return this.parseMatch(text);
   }
 
   /** Single round-trip to Gemini: enforces the timeout and turns failures into a hint. */
@@ -225,6 +276,36 @@ export class GeminiProvider implements PrepProvider {
     }
 
     return parsed;
+  }
+
+  private parseMatch(text: string | undefined): ResumeMatchResult {
+    const obj = this.parseJson(text);
+    const stringArray = (v: unknown): string[] =>
+      Array.isArray(v)
+        ? v.filter((x): x is string => typeof x === 'string')
+        : [];
+
+    const score = typeof obj.score === 'number' ? obj.score : NaN;
+    if (!Number.isFinite(score)) {
+      throw new PrepGenerationError('model returned an invalid score');
+    }
+
+    const match: ResumeMatchResult = {
+      score,
+      summary: typeof obj.summary === 'string' ? obj.summary : '',
+      strengths: stringArray(obj.strengths),
+      gaps: stringArray(obj.gaps),
+    };
+
+    const hasContent =
+      match.summary.length > 0 ||
+      match.strengths.length > 0 ||
+      match.gaps.length > 0;
+    if (!hasContent) {
+      throw new PrepGenerationError('model returned an empty match');
+    }
+
+    return match;
   }
 
   private parseJson(text: string | undefined): Record<string, unknown> {

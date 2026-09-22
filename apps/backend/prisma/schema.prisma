@@ -22,6 +22,11 @@ model User {
   // Non-null while a public, read-only share link is turned on for this
   // account — the token is what's in the /share/:token URL.
   shareToken          String?        @unique
+  // Extracted plain text of the last uploaded résumé — never the binary file,
+  // and never sent to the client. Powers per-job résumé match scoring.
+  resumeText          String?
+  resumeFileName      String?
+  resumeUpdatedAt     DateTime?
   jobs                Job[]
   refreshTokens       RefreshToken[]
 }
@@ -54,6 +59,8 @@ model Job {
   salary           String?
   prep             Json?
   prepGeneratedAt  DateTime?
+  resumeMatch      Json?
+  resumeMatchAt    DateTime?
   nextAction       String?
   nextActionDue    DateTime?
   contactName      String?

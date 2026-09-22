@@ -36,6 +36,7 @@ import {
   jobToForm,
 } from "@/app/dashboard/components/JobFormDialog";
 import { PrepCard } from "./components/PrepCard";
+import { MatchCard } from "./components/MatchCard";
 import { NextStep } from "./components/NextStep";
 
 import { deleteJob, getSingleJob, setJobArchived, updateJob } from "@/lib/api";
@@ -287,6 +288,8 @@ function JobDetailContent() {
               </Button>
             </CardBody>
           </Card>
+
+          <MatchCard job={job} onUpdated={setJob} />
 
           {(job.contactName || job.contactEmail || job.contactLinkedin) && (
             <Card>

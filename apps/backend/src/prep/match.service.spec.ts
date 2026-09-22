@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   BadGatewayException,
+  BadRequestException,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { PrepService } from './prep.service';
+import { MatchService } from './match.service';
 import {
   PREP_PROVIDER,
   PrepGenerationError,
@@ -17,16 +18,15 @@ import {
   PrismaMock,
 } from '../test/prisma.mock';
 
-const SAMPLE_PREP = {
-  summary: 's',
-  likelyQuestions: ['q1'],
-  talkingPoints: ['t1'],
-  research: ['r1'],
-  questionsToAsk: ['a1'],
+const SAMPLE_RESULT = {
+  score: 82,
+  summary: 'Strong overlap on the core stack.',
+  strengths: ['5 years of React'],
+  gaps: ['No Go experience'],
 };
 
-describe('PrepService', () => {
-  let service: PrepService;
+describe('MatchService', () => {
+  let service: MatchService;
   let prisma: PrismaMock;
   let provider: jest.Mocked<PrepProvider>;
 
@@ -41,13 +41,13 @@ describe('PrepService', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        PrepService,
+        MatchService,
         prismaMockProvider(prisma),
         { provide: PREP_PROVIDER, useValue: provider },
       ],
     }).compile();
 
-    service = module.get(PrepService);
+    service = module.get(MatchService);
   });
 
   it("404s for a job that isn't the user's", async () => {
@@ -55,40 +55,59 @@ describe('PrepService', () => {
     await expect(service.generate('j1', 'u1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
-    expect(provider.generate).not.toHaveBeenCalled();
+    expect(provider.matchResume).not.toHaveBeenCalled();
   });
 
-  it('stores the prep + timestamp on the job and returns it', async () => {
+  it('400s when the user has no résumé uploaded', async () => {
     prisma.job.findFirst.mockResolvedValue({
       id: 'j1',
       userId: 'u1',
       title: 'Dev',
       company: 'Acme',
-      status: 'Interview',
-      location: null,
-      salary: null,
+      notes: null,
+    });
+    prisma.user.findUnique.mockResolvedValue({ resumeText: null });
+
+    await expect(service.generate('j1', 'u1')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(provider.matchResume).not.toHaveBeenCalled();
+  });
+
+  it('stores the band-computed match + timestamp on the job and returns it', async () => {
+    prisma.job.findFirst.mockResolvedValue({
+      id: 'j1',
+      userId: 'u1',
+      title: 'Dev',
+      company: 'Acme',
       notes: 'nice recruiter call',
     });
-    provider.generate.mockResolvedValue(SAMPLE_PREP);
-    prisma.job.update.mockResolvedValue({ id: 'j1', prep: SAMPLE_PREP });
+    prisma.user.findUnique.mockResolvedValue({ resumeText: 'a whole résumé' });
+    provider.matchResume.mockResolvedValue(SAMPLE_RESULT);
+    prisma.job.update.mockResolvedValue({ id: 'j1' });
 
     await service.generate('j1', 'u1');
 
-    expect(provider.generate).toHaveBeenCalledWith(
-      expect.objectContaining({ title: 'Dev', company: 'Acme' }),
+    expect(provider.matchResume).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Dev',
+        company: 'Acme',
+        resumeText: 'a whole résumé',
+      }),
     );
     expect(prisma.job.update).toHaveBeenCalledWith({
       where: { id: 'j1' },
-      data: expect.objectContaining({
-        prep: SAMPLE_PREP,
-        prepGeneratedAt: expect.any(Date),
-      }),
+      data: {
+        resumeMatch: expect.objectContaining({ score: 82, band: 'strong' }),
+        resumeMatchAt: expect.any(Date),
+      },
     });
   });
 
   it('maps a not-configured provider to 503', async () => {
     prisma.job.findFirst.mockResolvedValue({ id: 'j1', userId: 'u1' });
-    provider.generate.mockRejectedValue(new PrepUnavailableError());
+    prisma.user.findUnique.mockResolvedValue({ resumeText: 'a résumé' });
+    provider.matchResume.mockRejectedValue(new PrepUnavailableError());
     await expect(service.generate('j1', 'u1')).rejects.toBeInstanceOf(
       ServiceUnavailableException,
     );
@@ -96,7 +115,8 @@ describe('PrepService', () => {
 
   it('maps a generation failure to 502', async () => {
     prisma.job.findFirst.mockResolvedValue({ id: 'j1', userId: 'u1' });
-    provider.generate.mockRejectedValue(new PrepGenerationError());
+    prisma.user.findUnique.mockResolvedValue({ resumeText: 'a résumé' });
+    provider.matchResume.mockRejectedValue(new PrepGenerationError());
     await expect(service.generate('j1', 'u1')).rejects.toBeInstanceOf(
       BadGatewayException,
     );

@@ -68,13 +68,18 @@ Frontend visual system — "Paper & Ink":
 
 ## AI features
 
-Two things, both on **Google Gemini's free tier**:
+Three things, all on **Google Gemini's free tier**:
 
 - **Interview prep** — the job-detail page generates prep tailored to a role: likely
   questions, talking points, what to research, questions to ask — from the job's details
   and your notes.
 - **Autofill from a job description** — paste a posting into the "Add application" dialog
   and it fills in the role, company, location, salary and a few notes for you to review.
+- **Résumé match score** — upload your résumé once (PDF or Word, in Settings) and check
+  how well it fits any specific role from that job's page: a 0–100 score, a few concrete
+  strengths, and the gaps worth addressing. Only the extracted text is ever stored — the
+  file itself is parsed and discarded. Scoring is on demand per job, the same as prep; a
+  score badge then shows on that job's row in the dashboard list.
 
 ![AI-generated interview prep on the job-detail page](docs/job-prep-light.png)
 

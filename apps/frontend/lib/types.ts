@@ -31,6 +31,8 @@ export interface Job {
   statusChangedAt: string;
   prep?: JobPrep | null;
   prepGeneratedAt?: string | null;
+  resumeMatch?: ResumeMatch | null;
+  resumeMatchAt?: string | null;
   /** Free-text next step, e.g. "Email recruiter about timeline". */
   nextAction?: string | null;
   /** ISO date the next step is due. Drives the "Needs attention" strip. */
@@ -70,6 +72,21 @@ export interface AuthUser {
    * Absent right after login/signup — fetch GET /users/me for the
    * authoritative value. */
   shareToken?: string | null;
+  /** Whether a résumé is on file — the text itself never reaches the client.
+   * Absent right after login/signup — fetch GET /users/me for the
+   * authoritative value. */
+  hasResume?: boolean;
+  resumeFileName?: string | null;
+  resumeUpdatedAt?: string | null;
+}
+
+/** POST /jobs/:id/match — a résumé's fit for one specific job. */
+export interface ResumeMatch {
+  score: number;
+  band: "strong" | "partial" | "weak";
+  summary: string;
+  strengths: string[];
+  gaps: string[];
 }
 
 /** A job as shown on someone else's public share page — trimmed of

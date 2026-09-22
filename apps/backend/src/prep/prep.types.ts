@@ -24,6 +24,21 @@ export interface ParsedJob {
   notes?: string;
 }
 
+export interface ResumeMatchInput {
+  title: string;
+  company: string;
+  notes?: string | null;
+  resumeText: string;
+}
+
+/** Raw model output — score isn't clamped/rounded and has no band yet; see match.calc.ts. */
+export interface ResumeMatchResult {
+  score: number;
+  summary: string;
+  strengths: string[];
+  gaps: string[];
+}
+
 /** Thrown by a provider that has no credentials configured. */
 export class PrepUnavailableError extends Error {
   constructor(message = 'AI prep is not configured') {
@@ -48,4 +63,6 @@ export interface PrepProvider {
   generate(input: PrepInput): Promise<JobPrep>;
   /** Pull structured fields out of a pasted job description. */
   extractJob(description: string): Promise<ParsedJob>;
+  /** Score how well a résumé fits one specific role. */
+  matchResume(input: ResumeMatchInput): Promise<ResumeMatchResult>;
 }

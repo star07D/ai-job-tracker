@@ -1,13 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { Copy, Mail, RefreshCw, Share2 } from "lucide-react";
+import { Copy, FileText, Mail, RefreshCw, Share2, Trash2, Upload } from "lucide-react";
 import { Dialog, DialogBody, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { disableSharing, enableSharing, getMe, updateEmailDigest } from "@/lib/api";
+import {
+  ApiError,
+  disableSharing,
+  enableSharing,
+  getMe,
+  removeResume,
+  updateEmailDigest,
+  uploadResume,
+} from "@/lib/api";
+import { relativeTime } from "@/lib/format";
 import { updateStoredUser } from "@/lib/auth";
 import { cn } from "@/lib/cn";
 
@@ -24,6 +33,10 @@ export function SettingsDialog({
   const [saving, setSaving] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [sharingSaving, setSharingSaving] = useState(false);
+  const [resumeFileName, setResumeFileName] = useState<string | null>(null);
+  const [resumeUpdatedAt, setResumeUpdatedAt] = useState<string | null>(null);
+  const [resumeSaving, setResumeSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -33,6 +46,8 @@ export function SettingsDialog({
         setEmail(user.email);
         setEnabled(!!user.emailDigestEnabled);
         setShareToken(user.shareToken ?? null);
+        setResumeFileName(user.hasResume ? (user.resumeFileName ?? null) : null);
+        setResumeUpdatedAt(user.resumeUpdatedAt ?? null);
       })
       .catch(() => toast.error("Couldn't load your settings"))
       .finally(() => setLoading(false));
@@ -86,6 +101,44 @@ export function SettingsDialog({
       toast.error(err instanceof Error ? err.message : "Couldn't save that");
     } finally {
       setSharingSaving(false);
+    }
+  }
+
+  async function handleResumeFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // so picking the same file again still fires onChange
+    if (!file) return;
+
+    setResumeSaving(true);
+    try {
+      const user = await uploadResume(file);
+      setResumeFileName(user.resumeFileName ?? null);
+      setResumeUpdatedAt(user.resumeUpdatedAt ?? null);
+      updateStoredUser({ hasResume: true });
+      toast.success("Résumé uploaded");
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError
+          ? err.message
+          : "Couldn't read that file — try again.",
+      );
+    } finally {
+      setResumeSaving(false);
+    }
+  }
+
+  async function handleRemoveResume() {
+    setResumeSaving(true);
+    try {
+      await removeResume();
+      setResumeFileName(null);
+      setResumeUpdatedAt(null);
+      updateStoredUser({ hasResume: false });
+      toast.success("Résumé removed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't remove that");
+    } finally {
+      setResumeSaving(false);
     }
   }
 
@@ -203,6 +256,62 @@ export function SettingsDialog({
                   </Button>
                 </div>
               )}
+            </div>
+
+            <div className="rounded-lg border border-border bg-surface-2/40 p-3.5">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex gap-2.5">
+                  <FileText size={16} className="mt-0.5 shrink-0 text-fg-subtle" />
+                  <div>
+                    <p className="text-[13.5px] font-semibold">Résumé</p>
+                    <p className="mt-0.5 text-[12.5px] leading-relaxed text-fg-muted">
+                      {resumeFileName ? (
+                        <>
+                          <span className="font-medium text-fg">
+                            {resumeFileName}
+                          </span>
+                          {resumeUpdatedAt &&
+                            ` — uploaded ${relativeTime(resumeUpdatedAt)}`}
+                        </>
+                      ) : (
+                        "Upload it once to check how well it fits any job — PDF or Word, up to 5MB."
+                      )}
+                    </p>
+                  </div>
+                </div>
+                {resumeFileName && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveResume}
+                    disabled={resumeSaving}
+                    aria-label="Remove résumé"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                )}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx"
+                aria-label="Résumé file"
+                className="hidden"
+                onChange={handleResumeFile}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                loading={resumeSaving}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload size={13} />
+                {resumeFileName ? "Replace" : "Upload résumé"}
+              </Button>
             </div>
           </>
         )}

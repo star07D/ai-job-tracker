@@ -34,6 +34,7 @@ describe('UsersService', () => {
 
       const selectArg = prisma.user.findUnique.mock.calls[0][0].select;
       expect(selectArg).not.toHaveProperty('password');
+      expect(selectArg).not.toHaveProperty('resumeText');
       expect(Object.keys(selectArg).sort()).toEqual(
         [
           'createdAt',
@@ -42,10 +43,13 @@ describe('UsersService', () => {
           'firstName',
           'id',
           'lastName',
+          'resumeFileName',
+          'resumeUpdatedAt',
           'shareToken',
         ].sort(),
       );
       expect(user).not.toHaveProperty('password');
+      expect(user.hasResume).toBe(false);
     });
 
     it('throws 404 when the user does not exist', async () => {
@@ -75,6 +79,48 @@ describe('UsersService', () => {
     });
   });
 
+  describe('uploadResume', () => {
+    it('stores the extracted text, filename and timestamp, and reports hasResume', async () => {
+      prisma.user.update.mockResolvedValue({
+        id: 'u1',
+        resumeFileName: 'cv.pdf',
+        resumeUpdatedAt: new Date(),
+      });
+
+      const user = await service.uploadResume('u1', 'a whole résumé', 'cv.pdf');
+
+      const call = prisma.user.update.mock.calls[0][0];
+      expect(call.where).toEqual({ id: 'u1' });
+      expect(call.data).toEqual({
+        resumeText: 'a whole résumé',
+        resumeFileName: 'cv.pdf',
+        resumeUpdatedAt: expect.any(Date),
+      });
+      expect(call.select).not.toHaveProperty('resumeText');
+      expect(user.hasResume).toBe(true);
+      expect(user).not.toHaveProperty('resumeText');
+    });
+  });
+
+  describe('removeResume', () => {
+    it('clears the résumé fields', async () => {
+      prisma.user.update.mockResolvedValue({
+        id: 'u1',
+        resumeFileName: null,
+        resumeUpdatedAt: null,
+      });
+
+      const user = await service.removeResume('u1');
+
+      expect(prisma.user.update).toHaveBeenCalledWith({
+        where: { id: 'u1' },
+        data: { resumeText: null, resumeFileName: null, resumeUpdatedAt: null },
+        select: expect.objectContaining({ resumeFileName: true }),
+      });
+      expect(user.hasResume).toBe(false);
+    });
+  });
+
   describe('enableSharing', () => {
     it('issues a fresh token and returns only public fields', async () => {
       prisma.user.update.mockResolvedValue({
@@ -88,7 +134,11 @@ describe('UsersService', () => {
       expect(call.where).toEqual({ id: 'u1' });
       expect(call.data.shareToken).toMatch(/^[0-9a-f]{32}$/);
       expect(call.select).not.toHaveProperty('password');
-      expect(user).toEqual({ id: 'u1', shareToken: 'sometoken' });
+      expect(user).toEqual({
+        id: 'u1',
+        shareToken: 'sometoken',
+        hasResume: false,
+      });
     });
 
     it('issues a different token each time (rotation)', async () => {

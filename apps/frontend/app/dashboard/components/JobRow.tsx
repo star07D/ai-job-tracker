@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/ui/badge";
 import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { dueInfo, dueToneClass } from "@/lib/due";
 import { isStale, stageInfo } from "@/lib/stale";
+import { MATCH_BAND_STYLES } from "@/lib/match";
 import { cn } from "@/lib/cn";
 
 function formatDate(iso: string) {
@@ -96,6 +97,16 @@ export function JobRow({
         )}
       </Link>
 
+      {job.resumeMatch && (
+        <span
+          className={cn(
+            "label-mono hidden shrink-0 rounded-md px-1.5 py-0.5 !text-[10px] sm:block",
+            MATCH_BAND_STYLES[job.resumeMatch.band].badge,
+          )}
+        >
+          {job.resumeMatch.score} match
+        </span>
+      )}
       <StatusBadge status={job.status} />
       <span className="hidden font-data text-[11px] text-fg-subtle sm:block">
         {formatDate(job.appliedDate)}

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
+import { ResumeParserService } from './resume-parser.service';
 import type { AuthenticatedRequest } from '../auth/interfaces/authenticated-request.interface';
 
 describe('UsersController', () => {
@@ -10,13 +11,19 @@ describe('UsersController', () => {
     updatePreferences: jest.fn(),
     enableSharing: jest.fn(),
     disableSharing: jest.fn(),
+    uploadResume: jest.fn(),
+    removeResume: jest.fn(),
   };
+  const resumeParser = { extractText: jest.fn() };
 
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [{ provide: UsersService, useValue: usersService }],
+      providers: [
+        { provide: UsersService, useValue: usersService },
+        { provide: ResumeParserService, useValue: resumeParser },
+      ],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
@@ -82,5 +89,56 @@ describe('UsersController', () => {
 
     expect(usersService.disableSharing).toHaveBeenCalledWith('u1');
     expect(result).toEqual({ id: 'u1', shareToken: null });
+  });
+
+  it('POST /users/me/resume parses the file and stores the extracted text', async () => {
+    resumeParser.extractText.mockResolvedValue('a whole résumé');
+    usersService.uploadResume.mockResolvedValue({
+      id: 'u1',
+      resumeFileName: 'cv.pdf',
+      hasResume: true,
+    });
+
+    const req = {
+      user: { userId: 'u1', email: 'a@example.com' },
+    } as AuthenticatedRequest;
+    const file = {
+      originalname: 'cv.pdf',
+      mimetype: 'application/pdf',
+      buffer: Buffer.from('%PDF-1.4'),
+    } as Express.Multer.File;
+    const result = await controller.uploadResume(req, file);
+
+    expect(resumeParser.extractText).toHaveBeenCalledWith(file);
+    expect(usersService.uploadResume).toHaveBeenCalledWith(
+      'u1',
+      'a whole résumé',
+      'cv.pdf',
+    );
+    expect(result).toEqual({
+      id: 'u1',
+      resumeFileName: 'cv.pdf',
+      hasResume: true,
+    });
+  });
+
+  it('DELETE /users/me/resume clears the stored résumé', async () => {
+    usersService.removeResume.mockResolvedValue({
+      id: 'u1',
+      resumeFileName: null,
+      hasResume: false,
+    });
+
+    const req = {
+      user: { userId: 'u1', email: 'a@example.com' },
+    } as AuthenticatedRequest;
+    const result = await controller.removeResume(req);
+
+    expect(usersService.removeResume).toHaveBeenCalledWith('u1');
+    expect(result).toEqual({
+      id: 'u1',
+      resumeFileName: null,
+      hasResume: false,
+    });
   });
 });
