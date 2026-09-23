@@ -199,6 +199,10 @@ export class GeminiProvider implements PrepProvider {
           ...cfg,
           responseMimeType: 'application/json',
           abortSignal: controller.signal,
+          // gemini-3.5-flash defaults to extended thinking even for plain
+          // structured-extraction calls like these — routinely 90s+ against
+          // this model, well past TIMEOUT_MS. Off, the same call is ~3s.
+          thinkingConfig: { thinkingBudget: 0 },
         },
       });
       return response.text;
