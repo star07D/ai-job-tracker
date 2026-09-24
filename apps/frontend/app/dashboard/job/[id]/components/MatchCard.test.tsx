@@ -104,7 +104,7 @@ describe("<MatchCard />", () => {
     );
 
     expect(
-      await screen.findByText(/AI prep isn.t set up/i),
+      await screen.findByText(/AI matching isn.t set up/i),
     ).toBeInTheDocument();
   });
 

@@ -86,7 +86,7 @@ export function MatchCard({
             </p>
             {notConfigured ? (
               <p className="label-mono mt-4 !text-[10px] !normal-case !tracking-normal">
-                AI prep isn&apos;t set up on this server yet.
+                AI matching isn&apos;t set up on this server yet.
               </p>
             ) : (
               <Button className="mt-4" onClick={run}>
