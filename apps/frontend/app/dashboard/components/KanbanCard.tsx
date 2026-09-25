@@ -4,6 +4,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { Job } from "@/lib/types";
+import { MatchBadge } from "@/components/ui/match-badge";
 import { dueInfo, dueToneClass } from "@/lib/due";
 import { isStale, stageInfo } from "@/lib/stale";
 import { cn } from "@/lib/cn";
@@ -93,6 +94,7 @@ export function KanbanCard({
                   {stage.label} in {job.status}
                 </span>
               )}
+              {job.resumeMatch && <MatchBadge match={job.resumeMatch} />}
             </div>
             {job.tags.length > 0 && (
               <div className="mt-1.5 flex flex-wrap gap-1">
