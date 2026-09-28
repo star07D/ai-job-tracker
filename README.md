@@ -10,13 +10,18 @@ contact card, follow-up reminders (a "next step" + due date per role, surfaced i
 dashboard "Needs attention" strip) with an optional daily email digest, staleness flags
 on applications that have gone quiet in a stage, an Insights page (funnel, reply rate and
 timings from your own history), an optional public share link for your
-pipeline, and two AI touches — interview prep per role, and autofilling a new application
-from a pasted job description. Light and dark themes.
+pipeline, and three AI touches — interview prep per role, autofilling a new application
+from a pasted job description, and a résumé match score per job. Light and dark themes.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.png">
-  <img alt="Rolio dashboard — applications list, follow-up reminders, and pipeline stats" src="docs/dashboard-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/dashboard-dark.webp">
+  <img alt="Rolio dashboard — applications list with résumé match scores, follow-up reminders, and pipeline stats" src="docs/dashboard-light.webp">
 </picture>
+
+The same pipeline as a kanban board — each card carries its status, follow-up flags and
+résumé match score:
+
+![Kanban board view](docs/board-light.webp)
 
 Monorepo with two npm workspaces:
 
@@ -81,7 +86,7 @@ Three things, all on **Google Gemini's free tier**:
   file itself is parsed and discarded. Scoring is on demand per job, the same as prep; a
   score badge then shows on that job's row in the dashboard list.
 
-![AI-generated interview prep on the job-detail page](docs/job-prep-light.png)
+![AI-generated interview prep and résumé match on the job-detail page](docs/job-prep-light.webp)
 
 It runs on **Google Gemini's free tier** (Flash models — no credit card). Set it up:
 
@@ -160,6 +165,8 @@ per week, a per-tag breakdown, and a few plain-language takeaways ("Applications
 'remote' reached interview 3 of 6 times, vs 2 of 8 without it"). No AI involved — it's
 deterministic maths in `apps/backend/src/insights/insights.calc.ts`, unit-tested against
 fixed dates.
+
+![Insights — funnel, reply rate, timings, weekly volume and per-tag stats](docs/insights-light.webp)
 
 It works because every status change is recorded as a `StatusEvent` (written in the same
 query as the job update), so the app knows the *path* a job took, not just where it ended
