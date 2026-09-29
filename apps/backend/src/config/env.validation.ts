@@ -42,6 +42,12 @@ class EnvVars {
   @IsString()
   GEMINI_MODEL?: string;
 
+  // Tried once if GEMINI_MODEL reports itself overloaded. Defaults to
+  // gemini-flash-latest — set to an empty string to disable the fallback.
+  @IsOptional()
+  @IsString()
+  GEMINI_FALLBACK_MODEL?: string;
+
   // Optional — email digests are disabled until both of these are set.
   @IsOptional()
   @IsString()

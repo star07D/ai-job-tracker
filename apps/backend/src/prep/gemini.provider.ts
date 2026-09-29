@@ -11,8 +11,13 @@ import {
   ResumeMatchInput,
   ResumeMatchResult,
 } from './prep.types';
+import { AbortedError, isOverloaded, toGenerationError } from './gemini-errors';
 
 const DEFAULT_MODEL = 'gemini-3.5-flash';
+// Tried once, only when the primary model reports itself overloaded (not on a
+// timeout, an auth failure, or anything else) — a lighter, usually-available
+// model, better than failing the request outright.
+const DEFAULT_FALLBACK_MODEL = 'gemini-flash-latest';
 const TIMEOUT_MS = 45_000;
 
 const PREP_INSTRUCTION = `You are a sharp interview coach preparing a candidate for one specific role.
@@ -107,10 +112,16 @@ export class GeminiProvider implements PrepProvider {
   private readonly logger = new Logger(GeminiProvider.name);
   private readonly client: GoogleGenAI | null;
   private readonly model: string;
+  private readonly fallbackModel: string | null;
 
   constructor(config: ConfigService) {
     const apiKey = config.get<string>('GEMINI_API_KEY');
     this.model = config.get<string>('GEMINI_MODEL') || DEFAULT_MODEL;
+    // unset -> the default fallback; explicitly set to "" -> no fallback at all
+    const fallbackRaw = config.get<string>('GEMINI_FALLBACK_MODEL');
+    const fallback =
+      fallbackRaw === undefined ? DEFAULT_FALLBACK_MODEL : fallbackRaw;
+    this.fallbackModel = fallback && fallback !== this.model ? fallback : null;
     this.client = apiKey ? new GoogleGenAI({ apiKey }) : null;
   }
 
@@ -175,8 +186,9 @@ export class GeminiProvider implements PrepProvider {
     return this.parseMatch(text);
   }
 
-  /** Single round-trip to Gemini: enforces the timeout and turns failures into a hint. */
-  private async request(
+  /** One round-trip to Gemini, on the given model, enforcing the timeout. */
+  private async attempt(
+    model: string,
     contents: string,
     cfg: {
       systemInstruction: string;
@@ -184,16 +196,12 @@ export class GeminiProvider implements PrepProvider {
       temperature: number;
     },
   ): Promise<string | undefined> {
-    if (!this.client) {
-      throw new PrepUnavailableError();
-    }
-
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      const response = await this.client.models.generateContent({
-        model: this.model,
+      const response = await this.client!.models.generateContent({
+        model,
         contents,
         config: {
           ...cfg,
@@ -208,22 +216,41 @@ export class GeminiProvider implements PrepProvider {
       return response.text;
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
-      this.logger.error(
-        `Gemini request failed (model=${this.model}): ${detail}`,
-      );
-      // surface a short, useful hint (the user runs this server themselves)
-      const hint = controller.signal.aborted
-        ? 'the model took too long to respond — try again'
-        : /not[_ ]?found|no longer available/i.test(detail)
-          ? `model "${this.model}" is unavailable — set GEMINI_MODEL to a current one`
-          : /api[_ ]?key|permission|unauthenticated|401|403/i.test(detail)
-            ? 'the GEMINI_API_KEY was rejected'
-            : /quota|rate|429|503|unavailable/i.test(detail)
-              ? 'the model is rate-limited or busy — try again shortly'
-              : 'request to Gemini failed';
-      throw new PrepGenerationError(hint);
+      this.logger.error(`Gemini request failed (model=${model}): ${detail}`);
+      throw controller.signal.aborted ? new AbortedError(detail) : err;
     } finally {
       clearTimeout(timer);
+    }
+  }
+
+  /** Tries the primary model, then — only if it reports itself overloaded,
+   * never on a timeout or an auth failure — the fallback model once. */
+  private async request(
+    contents: string,
+    cfg: {
+      systemInstruction: string;
+      responseSchema: object;
+      temperature: number;
+    },
+  ): Promise<string | undefined> {
+    if (!this.client) {
+      throw new PrepUnavailableError();
+    }
+
+    try {
+      return await this.attempt(this.model, contents, cfg);
+    } catch (err) {
+      if (this.fallbackModel && isOverloaded(err)) {
+        this.logger.warn(
+          `${this.model} is overloaded — retrying once on ${this.fallbackModel}`,
+        );
+        try {
+          return await this.attempt(this.fallbackModel, contents, cfg);
+        } catch (err2) {
+          throw toGenerationError(err2, this.fallbackModel);
+        }
+      }
+      throw toGenerationError(err, this.model);
     }
   }
 
