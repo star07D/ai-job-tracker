@@ -11,14 +11,22 @@ import {
   ResumeMatchInput,
   ResumeMatchResult,
 } from './prep.types';
-import { AbortedError, isOverloaded, toGenerationError } from './gemini-errors';
+import {
+  AbortedError,
+  shouldTryFallback,
+  toGenerationError,
+} from './gemini-errors';
 
 const DEFAULT_MODEL = 'gemini-3.5-flash';
-// Tried once, only when the primary model reports itself overloaded (not on a
-// timeout, an auth failure, or anything else) — a lighter, usually-available
-// model, better than failing the request outright.
+// Tried once — when the primary model reports itself overloaded, or when it
+// simply doesn't answer in time (seen in practice: fast directly, but
+// consistently slow specifically over this server's path to Google) — a
+// lighter, usually-available model, better than failing the request outright.
 const DEFAULT_FALLBACK_MODEL = 'gemini-flash-latest';
-const TIMEOUT_MS = 45_000;
+// Per attempt — a timeout now also triggers the fallback (see below), so two
+// sequential attempts must still land under the frontend's shortest AI-call
+// timeout (autofill, at 45s), with room for network overhead either side.
+const TIMEOUT_MS = 18_000;
 
 const PREP_INSTRUCTION = `You are a sharp interview coach preparing a candidate for one specific role.
 Given the role, company and the candidate's own notes, produce focused, practical prep.
@@ -223,8 +231,9 @@ export class GeminiProvider implements PrepProvider {
     }
   }
 
-  /** Tries the primary model, then — only if it reports itself overloaded,
-   * never on a timeout or an auth failure — the fallback model once. */
+  /** Tries the primary model, then — only if it reports itself overloaded or
+   * simply doesn't answer in time, never on an auth failure — the fallback
+   * model once. */
   private async request(
     contents: string,
     cfg: {
@@ -240,9 +249,11 @@ export class GeminiProvider implements PrepProvider {
     try {
       return await this.attempt(this.model, contents, cfg);
     } catch (err) {
-      if (this.fallbackModel && isOverloaded(err)) {
+      if (this.fallbackModel && shouldTryFallback(err)) {
+        const reason =
+          err instanceof AbortedError ? 'timed out' : 'is overloaded';
         this.logger.warn(
-          `${this.model} is overloaded — retrying once on ${this.fallbackModel}`,
+          `${this.model} ${reason} — retrying once on ${this.fallbackModel}`,
         );
         try {
           return await this.attempt(this.fallbackModel, contents, cfg);

@@ -1,5 +1,10 @@
 import { PrepGenerationError } from './prep.types';
-import { AbortedError, isOverloaded, toGenerationError } from './gemini-errors';
+import {
+  AbortedError,
+  isOverloaded,
+  shouldTryFallback,
+  toGenerationError,
+} from './gemini-errors';
 
 // The exact shape Google returned during a real demand spike (2026-09-28) —
 // this string is what triggered the fallback-model work, so it's pinned here.
@@ -30,6 +35,28 @@ describe('isOverloaded', () => {
   it('handles a non-Error throw', () => {
     expect(isOverloaded('503 UNAVAILABLE')).toBe(true);
     expect(isOverloaded('just some string')).toBe(false);
+  });
+});
+
+describe('shouldTryFallback', () => {
+  it('triggers on an explicit overload', () => {
+    expect(shouldTryFallback(new Error(REAL_OVERLOAD_MESSAGE))).toBe(true);
+  });
+
+  it('also triggers on our own timeout', () => {
+    expect(shouldTryFallback(new AbortedError('aborted'))).toBe(true);
+  });
+
+  it('never triggers on a rejected key', () => {
+    expect(
+      shouldTryFallback(new Error('API key not valid, 403 permission denied')),
+    ).toBe(false);
+  });
+
+  it('never triggers on a missing model', () => {
+    expect(
+      shouldTryFallback(new Error('model "gemini-x" is no longer available')),
+    ).toBe(false);
   });
 });
 

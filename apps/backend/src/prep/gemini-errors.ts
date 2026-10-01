@@ -4,13 +4,20 @@ import { PrepGenerationError } from './prep.types';
  * reporting the model overloaded, so the two never get confused below. */
 export class AbortedError extends Error {}
 
-/** Google's "the model is overloaded, try again" signal specifically — the one
- * case worth a fallback model. A timeout or an auth failure never counts, since
- * a different model wouldn't fix either of those. */
+/** Google's "the model is overloaded, try again" signal specifically. */
 export function isOverloaded(err: unknown): boolean {
   if (err instanceof AbortedError) return false;
   const detail = err instanceof Error ? err.message : String(err);
   return /"code":\s*503|UNAVAILABLE|overloaded|high demand/i.test(detail);
+}
+
+/** Whether a fallback model is worth a shot: Google said it's overloaded, or
+ * the request simply didn't answer in time (observed in practice: fast when
+ * called directly, but consistently timing out over this server's own path
+ * to Google — a second model is worth trying rather than failing outright).
+ * An auth failure never counts, since a different model wouldn't fix that. */
+export function shouldTryFallback(err: unknown): boolean {
+  return err instanceof AbortedError || isOverloaded(err);
 }
 
 export function toGenerationError(
