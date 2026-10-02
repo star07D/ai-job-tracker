@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -294,6 +298,87 @@ describe('AuthService', () => {
       await expect(service.refresh('stale')).rejects.toBeInstanceOf(
         UnauthorizedException,
       );
+    });
+  });
+
+  describe('refresh-token pruning', () => {
+    const NOW = new Date('2026-10-02T12:00:00.000Z');
+    const DAY = 86_400_000;
+    const user = {
+      id: 'u1',
+      email: 'a@example.com',
+      firstName: 'A',
+      lastName: 'B',
+    };
+    const liveToken = () => ({
+      id: 'rt1',
+      revokedAt: null,
+      expiresAt: new Date(NOW.getTime() + DAY),
+      user,
+    });
+
+    beforeEach(() => {
+      jest.useFakeTimers().setSystemTime(NOW);
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt2' });
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+      jest.restoreAllMocks();
+    });
+
+    it("sweeps this user's dead tokens when a refresh issues a new pair", async () => {
+      prisma.refreshToken.findUnique.mockResolvedValue(liveToken());
+
+      await service.refresh('some-raw-token');
+
+      // expired, or revoked more than a day ago — nothing live, nothing just rotated
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: {
+          userId: 'u1',
+          OR: [
+            { expiresAt: { lt: NOW } },
+            { revokedAt: { lt: new Date(NOW.getTime() - DAY) } },
+          ],
+        },
+      });
+    });
+
+    it('sweeps on Google sign-in too, scoped to that user', async () => {
+      prisma.user.findUnique.mockResolvedValue({ ...user, googleId: 'g1' });
+
+      await service.loginWithGoogle({
+        email: user.email,
+        firstName: 'A',
+        lastName: 'B',
+        googleId: 'g1',
+      });
+
+      expect(prisma.refreshToken.deleteMany).toHaveBeenCalledWith({
+        where: expect.objectContaining({ userId: 'u1' }),
+      });
+    });
+
+    it('does not sweep when a refresh is rejected', async () => {
+      prisma.refreshToken.findUnique.mockResolvedValue(null);
+
+      await expect(service.refresh('nope')).rejects.toBeInstanceOf(
+        UnauthorizedException,
+      );
+
+      expect(prisma.refreshToken.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('never lets a failed sweep break the login or refresh', async () => {
+      const warn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
+      prisma.refreshToken.findUnique.mockResolvedValue(liveToken());
+      prisma.refreshToken.deleteMany.mockRejectedValue(new Error('db hiccup'));
+
+      const result = await service.refresh('some-raw-token');
+
+      expect(result.accessToken).toBe('test.jwt.token');
+      expect(result.refreshToken).toMatch(/^[0-9a-f]{96}$/);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('db hiccup'));
     });
   });
 

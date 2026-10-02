@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -9,7 +10,10 @@ import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
-import { REFRESH_TOKEN_TTL_MS } from './auth.constants';
+import {
+  REFRESH_TOKEN_TTL_MS,
+  REVOKED_TOKEN_RETENTION_MS,
+} from './auth.constants';
 import { GoogleProfile } from './google/google.strategy';
 
 export interface PublicUser {
@@ -31,6 +35,8 @@ type UserRecord = PublicUser & { password: string | null };
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
@@ -168,6 +174,8 @@ export class AuthService {
       },
     });
 
+    await this.pruneRefreshTokens(user.id);
+
     return {
       accessToken,
       refreshToken,
@@ -178,6 +186,30 @@ export class AuthService {
         email: user.email,
       },
     };
+  }
+
+  /** Housekeeping: drops this user's refresh tokens that can never be used
+   * again (expired, or revoked a while ago). Every token issue — login,
+   * signup, Google sign-in and each refresh rotation — passes through here, so
+   * rows are swept as fast as they're created. Best-effort: a failure here
+   * must never break a login or a refresh. */
+  private async pruneRefreshTokens(userId: string): Promise<void> {
+    const now = Date.now();
+    try {
+      await this.prisma.refreshToken.deleteMany({
+        where: {
+          userId,
+          OR: [
+            { expiresAt: { lt: new Date(now) } },
+            { revokedAt: { lt: new Date(now - REVOKED_TOKEN_RETENTION_MS) } },
+          ],
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Couldn't prune refresh tokens for ${userId}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   }
 
   // Refresh tokens are stored hashed — a database leak alone doesn't hand out

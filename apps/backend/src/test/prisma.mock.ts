@@ -23,6 +23,7 @@ export type PrismaMock = {
     findUnique: jest.Mock;
     update: jest.Mock;
     updateMany: jest.Mock;
+    deleteMany: jest.Mock;
   };
 };
 
@@ -46,6 +47,7 @@ export function createPrismaMock(): PrismaMock {
       findUnique: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
+      deleteMany: jest.fn(),
     },
   };
 }

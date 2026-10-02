@@ -136,6 +136,9 @@ Short-lived access tokens + refresh-token rotation, not a long-lived JWT in `loc
   recovers the session from that cookie — that's what makes losing the in-memory token on
   reload invisible to you as a user.
 - **Logout** revokes that session's refresh token server-side, not just the cookie.
+- Dead tokens don't pile up: every time a new pair is issued (login, signup, Google
+  sign-in, each rotation) that user's expired tokens, and ones revoked more than a day
+  ago, are deleted. It's best-effort — a failed sweep never blocks a login.
 
 ### Google sign-in
 
@@ -237,8 +240,6 @@ apps/frontend   Next.js app — see apps/frontend/AGENTS.md for Next 16 rules
 ## Known gaps / deferred work
 
 - `GET /jobs` filtering, sorting and pagination are done client-side.
-- Refresh tokens aren't pruned once expired/revoked — the rows just linger (harmless,
-  since expiry/revocation is checked on every use, just not swept up).
 
 ## Deploying
 
