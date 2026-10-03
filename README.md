@@ -229,10 +229,41 @@ recruiter's contact details. That's not a client-side filter:
 `apps/backend/src/public/public.service.ts` explicitly `select`s only the fields meant to
 be public, so a future bug in the frontend can't leak more than the schema already allows.
 
+**AI: the model writes, code decides.** The résumé match asks Gemini for a score and a
+write-up — but the *verdict* ("strong / partial / weak") is computed in
+`apps/backend/src/prep/match.calc.ts`, not asked of the model, so the label can never
+disagree with the number beside it, and the thresholds are unit-tested at their boundaries.
+Same instinct as the Insights takeaways, which are fixed rules over real numbers rather than
+generated text. The uploaded PDF/Word file is parsed to plain text in memory and discarded —
+only the text is stored — which avoided standing up file storage at all.
+
+**A live bug that looked like one thing and was another.** Adding an application on the
+live site silently did nothing. The cause wasn't in the form: the backend deploy on Render
+had been *failing* for days (so it kept serving an old build), because `NODE_ENV=production`
+— added in the auth-hardening commit — makes a bare `npm ci` skip the dev dependencies that
+`nest build` needs. The frontend deployed fine and kept sending a field the stale API
+rejected, and the form swallowed the error. Three fixes: `npm ci --include=dev`
+(`render.yaml`), surfacing the server's message instead of swallowing it, and a
+troubleshooting note in `DEPLOYING.md` — a failed deploy is silent by default.
+
+**Diagnosing the AI outage by taking the app out of the loop.** Interview prep started
+failing with a "rate-limited" error. Rather than guess at quotas or keys, I called Gemini
+directly with the project's own key, in three steps: a plain prompt (instant), the app's
+exact structured-JSON request (90+ seconds), and the same request with the model's
+"thinking" switched off (3.6 seconds). The default model was spending its time reasoning
+over a simple fill-in-the-template task and blowing past the app's timeout — so the fix was
+one config line in the shared request path. Later 503 "high demand" spikes, and one case
+where the model was fast when called directly but slow from the server, led to a one-shot
+fallback model (`apps/backend/src/prep/gemini-errors.ts`) triggered only by an overload or
+a timeout — never an auth failure, which a second model can't fix — with the per-attempt
+timeout sized so two attempts still finish inside the frontend's shortest AI-call limit
+(45 seconds).
+
 ## Layout
 
 ```
-apps/backend    NestJS API — auth, jobs, users, prep (AI), Prisma schema + migrations
+apps/backend    NestJS API — auth, jobs, users, insights, public share, email digest,
+                AI (prep / autofill / résumé match), Prisma schema + migrations
 apps/frontend   Next.js app — see apps/frontend/AGENTS.md for Next 16 rules
 .git-archive    pre-consolidation git history of the two original repos (bundles)
 ```
