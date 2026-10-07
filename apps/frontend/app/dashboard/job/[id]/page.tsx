@@ -37,6 +37,7 @@ import {
 } from "@/app/dashboard/components/JobFormDialog";
 import { PrepCard } from "./components/PrepCard";
 import { MatchCard } from "./components/MatchCard";
+import { DraftCard } from "./components/DraftCard";
 import { NextStep } from "./components/NextStep";
 
 import { deleteJob, getSingleJob, setJobArchived, updateJob } from "@/lib/api";
@@ -250,6 +251,8 @@ function JobDetailContent() {
           </Card>
 
           <PrepCard job={job} onUpdated={setJob} />
+
+          <DraftCard job={job} />
         </div>
 
         <div className="space-y-4">

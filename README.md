@@ -73,7 +73,7 @@ Frontend visual system — "Paper & Ink":
 
 ## AI features
 
-Three things, all on **Google Gemini's free tier**:
+Four things, all on **Google Gemini's free tier**:
 
 - **Interview prep** — the job-detail page generates prep tailored to a role: likely
   questions, talking points, what to research, questions to ask — from the job's details
@@ -85,6 +85,10 @@ Three things, all on **Google Gemini's free tier**:
   strengths, and the gaps worth addressing. Only the extracted text is ever stored — the
   file itself is parsed and discarded. Scoring is on demand per job, the same as prep; a
   score badge then shows on that job's row in the dashboard list.
+- **Email drafts** — a "Draft an email" card on each job writes a follow-up, a thank-you
+  after an interview, or a cover letter, addressed to the job's contact and signed with
+  your name. You edit it, then copy it or open it in your mail app. Drafts use only what
+  the app already knows (the cover letter also needs your résumé) and are never stored.
 
 ![AI-generated interview prep and résumé match on the job-detail page](docs/job-prep-light.webp)
 

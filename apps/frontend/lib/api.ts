@@ -1,5 +1,7 @@
 import {
   AuthUser,
+  Draft,
+  DraftKind,
   Insights,
   Job,
   JobInput,
@@ -275,6 +277,15 @@ export function uploadResume(file: File) {
 
 export function removeResume() {
   return apiFetch<AuthUser>("/users/me/resume", { method: "DELETE" });
+}
+
+/** Draft a follow-up, thank-you or cover letter for a job. Not stored. */
+export function generateDraft(jobId: string, kind: DraftKind) {
+  return apiFetch<Draft>(`/jobs/${jobId}/draft`, {
+    method: "POST",
+    body: JSON.stringify({ kind }),
+    timeoutMs: 60_000,
+  });
 }
 
 /** Score (or re-score) how well the stored résumé fits this job. Returns the updated job. */

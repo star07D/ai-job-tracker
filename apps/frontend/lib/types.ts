@@ -80,6 +80,14 @@ export interface AuthUser {
   resumeUpdatedAt?: string | null;
 }
 
+/** POST /jobs/:id/draft — an email the user edits and sends; never stored. */
+export type DraftKind = "follow-up" | "thank-you" | "cover-letter";
+
+export interface Draft {
+  subject: string;
+  body: string;
+}
+
 /** POST /jobs/:id/match — a résumé's fit for one specific job. */
 export interface ResumeMatch {
   score: number;

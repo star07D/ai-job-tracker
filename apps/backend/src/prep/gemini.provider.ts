@@ -8,6 +8,9 @@ import {
   PrepInput,
   PrepProvider,
   PrepUnavailableError,
+  DraftInput,
+  DraftKind,
+  DraftResult,
   ResumeMatchInput,
   ResumeMatchResult,
 } from './prep.types';
@@ -115,6 +118,45 @@ const MATCH_SCHEMA = {
   propertyOrdering: ['score', 'summary', 'strengths', 'gaps'],
 };
 
+const DRAFT_INSTRUCTION = `You write short, genuine job-search emails for a candidate to send under
+their own name. Plain text only — no markdown, no bullet points, no emoji.
+
+Rules:
+- Use ONLY the facts you are given. Never invent a skill, achievement, number, date,
+  interviewer name or detail of the conversation. If a detail isn't provided, leave it out
+  rather than guessing.
+- If a contact name is given, greet them by first name ("Hi Priya,"); otherwise "Hello,".
+- Sound like a real person: warm, direct, specific to this role and company. No clichés
+  ("I hope this email finds you well", "I am writing to express my interest").
+- End with a short sign-off using the sender's first name when it's given.
+- "subject" is a plain, specific subject line. "body" is the email text only.
+
+Length and purpose depend on the kind:
+- follow-up: under 110 words. Politely check in on the application's status and restate
+  interest in one line. If a next step is given, build the message around it.
+- thank-you: under 130 words. Thank them for their time after an interview, mention one
+  thing from the notes if the notes give something genuine to reference, and reaffirm
+  interest. If the notes give nothing specific, keep it brief and general.
+- cover-letter: under 260 words, three short paragraphs. Connect the candidate's real
+  experience from their résumé to what this role needs; never claim experience the résumé
+  doesn't show.`;
+
+const DRAFT_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    subject: { type: Type.STRING },
+    body: { type: Type.STRING },
+  },
+  required: ['subject', 'body'],
+  propertyOrdering: ['subject', 'body'],
+};
+
+const DRAFT_LABELS: Record<DraftKind, string> = {
+  'follow-up': 'follow-up email (checking in on an application)',
+  'thank-you': 'thank-you email (after an interview)',
+  'cover-letter': 'cover letter',
+};
+
 @Injectable()
 export class GeminiProvider implements PrepProvider {
   private readonly logger = new Logger(GeminiProvider.name);
@@ -192,6 +234,37 @@ export class GeminiProvider implements PrepProvider {
     });
 
     return this.parseMatch(text);
+  }
+
+  async draftMessage(input: DraftInput): Promise<DraftResult> {
+    const sender = input.senderName?.trim();
+    const contents = [
+      `Write a ${DRAFT_LABELS[input.kind]}.`,
+      '',
+      `Role: ${input.title}`,
+      `Company: ${input.company}`,
+      `Current stage: ${input.status}`,
+      input.contactName?.trim() ? `Contact: ${input.contactName.trim()}` : null,
+      input.nextAction?.trim() ? `Next step: ${input.nextAction.trim()}` : null,
+      sender ? `Sender's first name: ${sender}` : null,
+      '',
+      'Candidate notes about this application (may be empty):',
+      input.notes?.trim() || '(none provided)',
+      input.resumeText?.trim()
+        ? `\nCandidate's résumé:\n${input.resumeText.trim()}`
+        : null,
+    ]
+      .filter((line) => line !== null)
+      .join('\n');
+
+    const text = await this.request(contents, {
+      systemInstruction: DRAFT_INSTRUCTION,
+      responseSchema: DRAFT_SCHEMA,
+      // some variety on regenerate, but not freewheeling — it's a real email
+      temperature: 0.6,
+    });
+
+    return this.parseDraft(text);
   }
 
   /** One round-trip to Gemini, on the given model, enforcing the timeout. */
@@ -348,6 +421,16 @@ export class GeminiProvider implements PrepProvider {
     }
 
     return match;
+  }
+
+  private parseDraft(text: string | undefined): DraftResult {
+    const obj = this.parseJson(text);
+    const subject = typeof obj.subject === 'string' ? obj.subject.trim() : '';
+    const body = typeof obj.body === 'string' ? obj.body.trim() : '';
+    if (!body) {
+      throw new PrepGenerationError('model returned an empty draft');
+    }
+    return { subject, body };
   }
 
   private parseJson(text: string | undefined): Record<string, unknown> {

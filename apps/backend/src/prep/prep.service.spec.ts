@@ -37,6 +37,7 @@ describe('PrepService', () => {
       generate: jest.fn(),
       extractJob: jest.fn(),
       matchResume: jest.fn(),
+      draftMessage: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({

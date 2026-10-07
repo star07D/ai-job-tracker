@@ -39,6 +39,28 @@ export interface ResumeMatchResult {
   gaps: string[];
 }
 
+export const DRAFT_KINDS = ['follow-up', 'thank-you', 'cover-letter'] as const;
+export type DraftKind = (typeof DRAFT_KINDS)[number];
+
+export interface DraftInput {
+  kind: DraftKind;
+  title: string;
+  company: string;
+  status: string;
+  notes?: string | null;
+  contactName?: string | null;
+  nextAction?: string | null;
+  /** The sender — used for the sign-off. */
+  senderName?: string | null;
+  /** Only needed for (and required by) the cover letter. */
+  resumeText?: string | null;
+}
+
+export interface DraftResult {
+  subject: string;
+  body: string;
+}
+
 /** Thrown by a provider that has no credentials configured. */
 export class PrepUnavailableError extends Error {
   constructor(message = 'AI prep is not configured') {
@@ -65,4 +87,6 @@ export interface PrepProvider {
   extractJob(description: string): Promise<ParsedJob>;
   /** Score how well a résumé fits one specific role. */
   matchResume(input: ResumeMatchInput): Promise<ResumeMatchResult>;
+  /** Draft a follow-up, thank-you or cover letter for one application. */
+  draftMessage(input: DraftInput): Promise<DraftResult>;
 }

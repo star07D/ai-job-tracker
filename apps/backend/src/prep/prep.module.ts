@@ -7,16 +7,24 @@ import { ParseController } from './parse.controller';
 import { ParseService } from './parse.service';
 import { MatchController } from './match.controller';
 import { MatchService } from './match.service';
+import { DraftController } from './draft.controller';
+import { DraftService } from './draft.service';
 import { GeminiProvider } from './gemini.provider';
 import { PREP_PROVIDER } from './prep.types';
 
 @Module({
   imports: [PrismaModule, AuthModule],
-  controllers: [PrepController, ParseController, MatchController],
+  controllers: [
+    PrepController,
+    ParseController,
+    MatchController,
+    DraftController,
+  ],
   providers: [
     PrepService,
     ParseService,
     MatchService,
+    DraftService,
     // Swap this line to point PREP_PROVIDER at a different LLM implementation.
     { provide: PREP_PROVIDER, useClass: GeminiProvider },
   ],
